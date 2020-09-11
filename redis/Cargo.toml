@@ -1,6 +1,7 @@
 [package]
 authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
 edition = "2018"
+license = "ISC"
 name = "rarity-cache-redis"
 version = "0.1.0"
 
