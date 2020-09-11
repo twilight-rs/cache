@@ -1,0 +1,7 @@
+[package]
+authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
+edition = "2018"
+name = "rarity-cache-redis"
+version = "0.1.0"
+
+[dependencies]

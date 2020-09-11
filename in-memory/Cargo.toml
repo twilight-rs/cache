@@ -1,0 +1,18 @@
+[package]
+authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
+edition = "2018"
+name = "rarity-cache-inmemory"
+version = "0.1.0"
+
+[dependencies]
+bitflags = { default-features = false, version = "1" }
+dashmap = { default-features = false, version = "3" }
+futures-util = { default-features = false, features = ["std"], version = "0.3" }
+rarity-cache = { default-features = false, path = "../base" }
+twilight-model = { branch = "trunk", default-features = false, git = "https://github.com/twilight-rs/twilight" }
+tracing = { default-features = false, features = ["std", "attributes"], version = "0.1" }
+
+[dev-dependencies]
+futures = "0.3"
+static_assertions = { default-features = false, version = "1" }
+tokio = { default-features = false, features = ["rt-core", "macros"], version = "0.2" }
