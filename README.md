@@ -74,3 +74,6 @@ rarity-cache-inmemory = { branch = "main", git = "https://github.com/rarity-rs/c
 ## License
 
 ISC.
+
+[`twilight-rs`]: https://twilight.rs
+[docs:repo:microsoft]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design
