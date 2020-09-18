@@ -44,7 +44,7 @@
 //! }
 //!
 //! // now asynchronously iterate over its members
-//! let mut members = cache.guilds.members(guild_id);
+//! let mut members = cache.guilds.members(guild_id).await?;
 //!
 //! while let Some(member) = members.next().await {
 //!     // the member is wrapped in an error since there can be an error from

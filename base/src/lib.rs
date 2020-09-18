@@ -34,9 +34,10 @@
 //! ```rust,no_run
 //! // Import the cache and the Repository trait to work with the repositories
 //! // that the backend implements.
+//! use futures_util::stream::StreamExt;
 //! use rarity_cache::{Cache, Repository};
 //! use rarity_cache_inmemory::InMemoryBackend;
-//! use twilight_model::id::MessageId;
+//! use twilight_model::id::{GuildId, MessageId};
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Here we create a cache that uses the in-memory backend. This can be
@@ -44,8 +45,8 @@
 //! let cache: Cache<InMemoryBackend> = Cache::new();
 //!
 //! // To update the cache, you pass events from the gateway into it. Say that
-//! we already have a gateway event to update the cache with:
-//! # let event = twilight_model::gateway::event::GatewayEvent::HeartbeatAck;
+//! // we already have a gateway event to update the cache with:
+//! # let event = twilight_model::gateway::event::Event::GatewayHeartbeatAck;
 //! cache.update(&event).await?;
 //!
 //! // It's as easy as calling the `update` method. The cache will call the
@@ -64,7 +65,7 @@
 //! let guild_id = GuildId(987_654_321);
 //!
 //! // Create an iterator over the members:
-//! let mut members = cache.guilds.members(guild_id);
+//! let mut members = cache.guilds.members(guild_id).await?;
 //!
 //! while let Some(member) = members.next().await {
 //!     // The member is wrapped in a Result in case if there's a problem

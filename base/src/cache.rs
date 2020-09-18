@@ -110,7 +110,10 @@ impl<T: Backend> Cache<T> {
     /// ```no_run
     /// use rarity_cache::Cache;
     /// use rarity_cache_inmemory::{InMemoryBackend, Repository};
-    /// use twilight_model::gateway::{event::Event, payload::RoleDelete};
+    /// use twilight_model::{
+    ///     gateway::{event::Event, payload::RoleDelete},
+    ///     id::{GuildId, RoleId},
+    /// };
     ///
     /// # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let event = Event::RoleDelete(RoleDelete {
