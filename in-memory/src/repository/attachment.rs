@@ -8,9 +8,11 @@ use rarity_cache::{
         channel::{AttachmentEntity, AttachmentRepository, MessageEntity},
         Entity,
     },
-    repository::{GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository},
+    repository::{
+        GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
+    },
 };
-use std::{future::Future, pin::Pin, sync::Arc};
+use std::sync::Arc;
 use twilight_model::id::AttachmentId;
 
 /// Repository to retrieve and work with attachments and their related entities.
@@ -55,7 +57,7 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
     fn upsert(
         &self,
         category_channel: AttachmentEntity,
-    ) -> Pin<Box<dyn Future<Output = Result<(), InMemoryBackendError>> + Send>> {
+    ) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
             .config
@@ -74,12 +76,10 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
 }
 
 impl AttachmentRepository<InMemoryBackendError> for InMemoryAttachmentRepository {
-    fn message<'a>(
-        &'a self,
+    fn message(
+        &self,
         attachment_id: AttachmentId,
-    ) -> Pin<
-        Box<dyn Future<Output = Result<Option<MessageEntity>, InMemoryBackendError>> + Send + 'a>,
-    > {
+    ) -> GetEntityFuture<'_, MessageEntity, InMemoryBackendError> {
         let message = self
             .0
             .attachments
@@ -109,12 +109,10 @@ impl InMemoryAttachmentRepository {
     /// }
     /// # Ok(()) }
     /// ```
-    pub fn message<'a>(
-        &'a self,
+    pub fn message(
+        &self,
         attachment_id: AttachmentId,
-    ) -> Pin<
-        Box<dyn Future<Output = Result<Option<MessageEntity>, InMemoryBackendError>> + Send + 'a>,
-    > {
+    ) -> GetEntityFuture<'_, MessageEntity, InMemoryBackendError> {
         AttachmentRepository::message(self, attachment_id)
     }
 }

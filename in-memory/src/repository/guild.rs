@@ -17,7 +17,7 @@ use rarity_cache::{
         UpsertEntityFuture,
     },
 };
-use std::{future::Future, pin::Pin, sync::Arc};
+use std::sync::Arc;
 use twilight_model::id::{ChannelId, EmojiId, GuildId, RoleId, UserId};
 
 /// Repository to retrieve and work with guilds and their related entities.
@@ -183,11 +183,7 @@ impl GuildRepository<InMemoryBackendError> for InMemoryGuildRepository {
         future::ok(stream).boxed()
     }
 
-    fn owner(
-        &self,
-        guild_id: GuildId,
-    ) -> Pin<Box<dyn Future<Output = Result<Option<UserEntity>, InMemoryBackendError>> + Send>>
-    {
+    fn owner(&self, guild_id: GuildId) -> GetEntityFuture<'_, UserEntity, InMemoryBackendError> {
         let guild = self
             .0
             .guilds
