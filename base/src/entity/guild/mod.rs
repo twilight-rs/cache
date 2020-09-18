@@ -18,7 +18,7 @@ use super::{
 };
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, ListEntityIdsFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::{
     guild::{
@@ -87,7 +87,7 @@ impl Entity for GuildEntity {
 }
 
 /// Repository to work with guilds and their associated entities.
-pub trait GuildRepository<Error: 'static>: Repository<GuildEntity, Error> {
+pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     /// Retrieve the AFK voice channel associated with a guild.
     ///
     /// Backend implementations should return `None` if the AFK channel isn't
@@ -95,43 +95,43 @@ pub trait GuildRepository<Error: 'static>: Repository<GuildEntity, Error> {
     /// present in the cache.
     ///
     /// [`GuildEntity::afk_channel_id`]: struct.GuildEntity.html#structfield.afk_channel_id
-    fn afk_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, VoiceChannelEntity, Error>;
+    fn afk_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error>;
 
     /// Retrieve a stream of channel IDs within a guild.
-    fn channel_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, ChannelId, Error>;
+    fn channel_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, ChannelId, B::Error>;
 
     /// Retrieve a stream of channels within a guild.
-    fn channels(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, GuildChannelEntity, Error>;
+    fn channels(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, GuildChannelEntity, B::Error>;
 
     /// Retrieve a stream of emoji IDs within a guild.
-    fn emoji_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, EmojiId, Error>;
+    fn emoji_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, EmojiId, B::Error>;
 
     /// Retrieve a stream of emojis within a guild.
-    fn emojis(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, EmojiEntity, Error>;
+    fn emojis(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, EmojiEntity, B::Error>;
 
     /// Retrieve a stream of member IDs within a guild.
-    fn member_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, Error>;
+    fn member_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, B::Error>;
 
     /// Retrieve a stream of members within a guild.
-    fn members(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, MemberEntity, Error>;
+    fn members(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, MemberEntity, B::Error>;
 
     /// Retrieve the owner associated with a guild.
     ///
     /// Backend implementations should return `None` if the user is not in the
     /// cache.
-    fn owner(&self, guild_id: GuildId) -> GetEntityFuture<'_, UserEntity, Error>;
+    fn owner(&self, guild_id: GuildId) -> GetEntityFuture<'_, UserEntity, B::Error>;
 
     /// Retrieve a stream of user IDs of presences within a guild.
-    fn presence_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, Error>;
+    fn presence_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, B::Error>;
 
     /// Retrieve a stream of presences within a guild.
-    fn presences(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, PresenceEntity, Error>;
+    fn presences(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, PresenceEntity, B::Error>;
 
     /// Retrieve a stream of role IDs within a guild.
-    fn role_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, RoleId, Error>;
+    fn role_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, RoleId, B::Error>;
 
     /// Retrieve a stream of roles within a guild.
-    fn roles(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, RoleEntity, Error>;
+    fn roles(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
 
     /// Retrieve the rules channel associated with a guild.
     ///
@@ -140,7 +140,7 @@ pub trait GuildRepository<Error: 'static>: Repository<GuildEntity, Error> {
     /// not present in the cache.
     ///
     /// [`GuildEntity::rules_channel_id`]: struct.GuildEntity.html#structfield.rules_channel_id
-    fn rules_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, TextChannelEntity, Error>;
+    fn rules_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, TextChannelEntity, B::Error>;
 
     /// Retrieve the system channel associated with a guild.
     ///
@@ -149,13 +149,15 @@ pub trait GuildRepository<Error: 'static>: Repository<GuildEntity, Error> {
     /// not present in the cache.
     ///
     /// [`GuildEntity::system_channel_id`]: struct.GuildEntity.html#structfield.system_channel_id
-    fn system_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, TextChannelEntity, Error>;
+    fn system_channel(&self, guild_id: GuildId)
+        -> GetEntityFuture<'_, TextChannelEntity, B::Error>;
 
     /// Retrieve a stream of voice states' user IDs within a guild.
-    fn voice_state_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, Error>;
+    fn voice_state_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, B::Error>;
 
     /// Retrieve a stream of voice states within a guild.
-    fn voice_states(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, VoiceStateEntity, Error>;
+    fn voice_states(&self, guild_id: GuildId)
+        -> ListEntitiesFuture<'_, VoiceStateEntity, B::Error>;
 
     /// Retrieve the widget channel associated with a guild.
     ///
@@ -164,5 +166,8 @@ pub trait GuildRepository<Error: 'static>: Repository<GuildEntity, Error> {
     /// not present in the cache.
     ///
     /// [`GuildEntity::widget_channel_id`]: struct.GuildEntity.html#structfield.widget_channel_id
-    fn widget_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, GuildChannelEntity, Error>;
+    fn widget_channel(
+        &self,
+        guild_id: GuildId,
+    ) -> GetEntityFuture<'_, GuildChannelEntity, B::Error>;
 }

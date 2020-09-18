@@ -1,4 +1,4 @@
-use super::entity::Entity as EntityTrait;
+use super::{backend::Backend as BackendTrait, entity::Entity as EntityTrait};
 use futures_util::{
     future::{self, FutureExt, TryFutureExt},
     stream::Stream,
@@ -18,15 +18,19 @@ pub type RemoveEntitiesFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>
 pub type UpsertEntityFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>> + Send + 'a>>;
 pub type UpsertEntitiesFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>> + Send + 'a>>;
 
-pub trait Repository<Entity: EntityTrait, Error: 'static> {
+pub trait Repository<Entity: EntityTrait, Backend: BackendTrait> {
+    /// Retrieve an immutable reference to the backend that the repository is
+    /// tied to.
+    fn backend(&self) -> &Backend;
+
     /// Get an entity by its ID in the cache.
-    fn get(&self, entity_id: Entity::Id) -> GetEntityFuture<'_, Entity, Error>;
+    fn get(&self, entity_id: Entity::Id) -> GetEntityFuture<'_, Entity, Backend::Error>;
 
     /// Stream a list of records of the entity.
-    fn list(&self) -> ListEntitiesFuture<'_, Entity, Error>;
+    fn list(&self) -> ListEntitiesFuture<'_, Entity, Backend::Error>;
 
     /// Remove an entity by its ID from the cache.
-    fn remove(&self, entity_id: Entity::Id) -> RemoveEntityFuture<'_, Error>;
+    fn remove(&self, entity_id: Entity::Id) -> RemoveEntityFuture<'_, Backend::Error>;
 
     /// Bulk remove multiple entities from the cache.
     ///
@@ -39,14 +43,14 @@ pub trait Repository<Entity: EntityTrait, Error: 'static> {
     fn remove_bulk<T: Iterator<Item = Entity::Id>>(
         &self,
         entity_ids: T,
-    ) -> RemoveEntitiesFuture<'_, Error> {
+    ) -> RemoveEntitiesFuture<'_, Backend::Error> {
         future::try_join_all(entity_ids.map(|id| self.remove(id)))
             .map_ok(|_| ())
             .boxed()
     }
 
     /// Upsert an entity into the cache.
-    fn upsert(&self, entity: Entity) -> UpsertEntityFuture<'_, Error>;
+    fn upsert(&self, entity: Entity) -> UpsertEntityFuture<'_, Backend::Error>;
 
     /// Bulk upsert multiple entities in the cache.
     ///
@@ -59,7 +63,7 @@ pub trait Repository<Entity: EntityTrait, Error: 'static> {
     fn upsert_bulk<T: Iterator<Item = Entity> + Send>(
         &self,
         entities: T,
-    ) -> UpsertEntitiesFuture<'_, Error> {
+    ) -> UpsertEntitiesFuture<'_, Backend::Error> {
         Box::pin(future::try_join_all(entities.map(|entity| self.upsert(entity))).map_ok(|_| ()))
     }
 }

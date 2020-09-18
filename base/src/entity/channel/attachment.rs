@@ -1,7 +1,7 @@
 use super::message::MessageEntity;
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::id::{AttachmentId, MessageId};
 
@@ -27,6 +27,6 @@ impl Entity for AttachmentEntity {
     }
 }
 
-pub trait AttachmentRepository<Error: 'static>: Repository<AttachmentEntity, Error> {
-    fn message(&self, attachment_id: AttachmentId) -> GetEntityFuture<'_, MessageEntity, Error>;
+pub trait AttachmentRepository<B: Backend>: Repository<AttachmentEntity, B> {
+    fn message(&self, attachment_id: AttachmentId) -> GetEntityFuture<'_, MessageEntity, B::Error>;
 }

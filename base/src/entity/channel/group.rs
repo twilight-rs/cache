@@ -1,7 +1,7 @@
 use super::{super::user::UserEntity, MessageEntity};
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::{
     channel::{ChannelType, Group},
@@ -47,13 +47,13 @@ impl Entity for GroupEntity {
     }
 }
 
-pub trait GroupRepository<Error: 'static>: Repository<GroupEntity, Error> {
+pub trait GroupRepository<B: Backend>: Repository<GroupEntity, B> {
     /// Retrieve the last message of a group.
-    fn last_message(&self, group_id: ChannelId) -> GetEntityFuture<'_, MessageEntity, Error>;
+    fn last_message(&self, group_id: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error>;
 
     /// Retrieve the owner of a group.
-    fn owner(&self, group_id: ChannelId) -> GetEntityFuture<'_, UserEntity, Error>;
+    fn owner(&self, group_id: ChannelId) -> GetEntityFuture<'_, UserEntity, B::Error>;
 
     /// Retrieve a stream of recipients associated with a group.
-    fn recipients(&self, group_id: ChannelId) -> ListEntitiesFuture<'_, UserEntity, Error>;
+    fn recipients(&self, group_id: ChannelId) -> ListEntitiesFuture<'_, UserEntity, B::Error>;
 }

@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -13,67 +13,71 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::EmojiId;
 
 /// Repository to retrieve and work with emojis and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryEmojiRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryEmojiRepository(pub(crate) InMemoryBackend);
 
-impl Repository<EmojiEntity, InMemoryBackendError> for InMemoryEmojiRepository {
+impl Repository<EmojiEntity, InMemoryBackend> for InMemoryEmojiRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, EmojiEntity, InMemoryBackendError> {
-        future::ok(self.0.emojis.get(&emoji_id).map(|r| r.value().clone())).boxed()
+        future::ok((self.0).0.emojis.get(&emoji_id).map(|r| r.value().clone())).boxed()
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, EmojiEntity, InMemoryBackendError> {
-        let stream = stream::iter(self.0.emojis.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter((self.0).0.emojis.iter().map(|r| Ok(r.value().clone()))).boxed();
 
         future::ok(stream).boxed()
     }
 
     fn remove(&self, emoji_id: EmojiId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::EMOJI) {
+        if !(self.0).0.config.entity_types().contains(EntityType::EMOJI) {
             return future::ok(()).boxed();
         }
 
-        self.0.emojis.remove(&emoji_id);
+        (self.0).0.emojis.remove(&emoji_id);
 
         future::ok(()).boxed()
     }
 
     fn upsert(&self, entity: EmojiEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::EMOJI) {
+        if !(self.0).0.config.entity_types().contains(EntityType::EMOJI) {
             return future::ok(()).boxed();
         }
 
-        self.0.emojis.insert(entity.id(), entity);
+        (self.0).0.emojis.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl EmojiRepository<InMemoryBackendError> for InMemoryEmojiRepository {
+impl EmojiRepository<InMemoryBackend> for InMemoryEmojiRepository {
     fn guild(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, GuildEntity, InMemoryBackendError> {
         let guild = self
             .0
+             .0
             .emojis
             .get(&emoji_id)
             .map(|emoji| emoji.guild_id)
-            .and_then(|id| self.0.guilds.get(&id))
+            .and_then(|id| (self.0).0.guilds.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()
     }
 
     fn roles(&self, emoji_id: EmojiId) -> ListEntitiesFuture<'_, RoleEntity, InMemoryBackendError> {
-        let role_ids = match self.0.emojis.get(&emoji_id) {
+        let role_ids = match (self.0).0.emojis.get(&emoji_id) {
             Some(emoji) => emoji.role_ids.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
         let iter = role_ids
             .into_iter()
-            .filter_map(move |id| self.0.roles.get(&id).map(|r| Ok(r.value().clone())));
+            .filter_map(move |id| (self.0).0.roles.get(&id).map(|r| Ok(r.value().clone())));
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()
@@ -82,10 +86,11 @@ impl EmojiRepository<InMemoryBackendError> for InMemoryEmojiRepository {
     fn user(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, UserEntity, InMemoryBackendError> {
         let user = self
             .0
+             .0
             .emojis
             .get(&emoji_id)
             .and_then(|emoji| emoji.user_id)
-            .and_then(|id| self.0.users.get(&id))
+            .and_then(|id| (self.0).0.users.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(user).boxed()

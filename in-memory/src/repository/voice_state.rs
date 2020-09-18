@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -13,21 +13,25 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::{GuildId, UserId};
 
 /// Repository to retrieve and work with voice states and their related
 /// entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryVoiceStateRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryVoiceStateRepository(pub(crate) InMemoryBackend);
 
-impl Repository<VoiceStateEntity, InMemoryBackendError> for InMemoryVoiceStateRepository {
+impl Repository<VoiceStateEntity, InMemoryBackend> for InMemoryVoiceStateRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         voice_state_id: (GuildId, UserId),
     ) -> GetEntityFuture<'_, VoiceStateEntity, InMemoryBackendError> {
         future::ok(
             self.0
+                 .0
                 .voice_states
                 .get(&voice_state_id)
                 .map(|r| r.value().clone()),
@@ -36,8 +40,14 @@ impl Repository<VoiceStateEntity, InMemoryBackendError> for InMemoryVoiceStateRe
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, VoiceStateEntity, InMemoryBackendError> {
-        let stream =
-            stream::iter(self.0.voice_states.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter(
+            (self.0)
+                .0
+                .voice_states
+                .iter()
+                .map(|r| Ok(r.value().clone())),
+        )
+        .boxed();
 
         future::ok(stream).boxed()
     }
@@ -48,6 +58,7 @@ impl Repository<VoiceStateEntity, InMemoryBackendError> for InMemoryVoiceStateRe
     ) -> RemoveEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::VOICE_STATE)
@@ -55,7 +66,7 @@ impl Repository<VoiceStateEntity, InMemoryBackendError> for InMemoryVoiceStateRe
             return future::ok(()).boxed();
         }
 
-        self.0.voice_states.remove(&voice_state_id);
+        (self.0).0.voice_states.remove(&voice_state_id);
 
         future::ok(()).boxed()
     }
@@ -63,6 +74,7 @@ impl Repository<VoiceStateEntity, InMemoryBackendError> for InMemoryVoiceStateRe
     fn upsert(&self, entity: VoiceStateEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::VOICE_STATE)
@@ -70,13 +82,13 @@ impl Repository<VoiceStateEntity, InMemoryBackendError> for InMemoryVoiceStateRe
             return future::ok(()).boxed();
         }
 
-        self.0.voice_states.insert(entity.id(), entity);
+        (self.0).0.voice_states.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl VoiceStateRepository<InMemoryBackendError> for InMemoryVoiceStateRepository {
+impl VoiceStateRepository<InMemoryBackend> for InMemoryVoiceStateRepository {
     fn channel(
         &self,
         guild_id: GuildId,
@@ -84,10 +96,11 @@ impl VoiceStateRepository<InMemoryBackendError> for InMemoryVoiceStateRepository
     ) -> GetEntityFuture<'_, VoiceChannelEntity, InMemoryBackendError> {
         let channel = self
             .0
+             .0
             .voice_states
             .get(&(guild_id, user_id))
             .and_then(|state| state.channel_id)
-            .and_then(|id| self.0.channels_voice.get(&id))
+            .and_then(|id| (self.0).0.channels_voice.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(channel).boxed()

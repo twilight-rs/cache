@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -14,48 +14,51 @@ use rarity_cache::{
         RemoveEntityFuture, Repository,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::{GuildId, UserId};
 
 /// Repository to retrieve and work with users and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryUserRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryUserRepository(pub(crate) InMemoryBackend);
 
-impl Repository<UserEntity, InMemoryBackendError> for InMemoryUserRepository {
+impl Repository<UserEntity, InMemoryBackend> for InMemoryUserRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(&self, user_id: UserId) -> GetEntityFuture<'_, UserEntity, InMemoryBackendError> {
-        future::ok(self.0.users.get(&user_id).map(|r| r.value().clone())).boxed()
+        future::ok((self.0).0.users.get(&user_id).map(|r| r.value().clone())).boxed()
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, UserEntity, InMemoryBackendError> {
-        let stream = stream::iter(self.0.users.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter((self.0).0.users.iter().map(|r| Ok(r.value().clone()))).boxed();
 
         future::ok(stream).boxed()
     }
 
     fn remove(&self, user_id: UserId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::USER) {
+        if !(self.0).0.config.entity_types().contains(EntityType::USER) {
             return future::ok(()).boxed();
         }
 
-        self.0.users.remove(&user_id);
+        (self.0).0.users.remove(&user_id);
 
         future::ok(()).boxed()
     }
 
     fn upsert(&self, entity: UserEntity) -> RemoveEntitiesFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::USER) {
+        if !(self.0).0.config.entity_types().contains(EntityType::USER) {
             return future::ok(()).boxed();
         }
 
-        self.0.users.insert(entity.id(), entity);
+        (self.0).0.users.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl UserRepository<InMemoryBackendError> for InMemoryUserRepository {
+impl UserRepository<InMemoryBackend> for InMemoryUserRepository {
     fn guild_ids(&self, user_id: UserId) -> ListEntityIdsFuture<'_, GuildId, InMemoryBackendError> {
-        let stream = self.0.user_guilds.get(&user_id).map_or_else(
+        let stream = (self.0).0.user_guilds.get(&user_id).map_or_else(
             || stream::empty().boxed(),
             |r| stream::iter(r.value().iter().map(|x| Ok(*x)).collect::<Vec<_>>()).boxed(),
         );
@@ -64,14 +67,14 @@ impl UserRepository<InMemoryBackendError> for InMemoryUserRepository {
     }
 
     fn guilds(&self, user_id: UserId) -> ListEntitiesFuture<'_, GuildEntity, InMemoryBackendError> {
-        let guild_ids = match self.0.user_guilds.get(&user_id) {
+        let guild_ids = match (self.0).0.user_guilds.get(&user_id) {
             Some(user_guilds) => user_guilds.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
         let iter = guild_ids
             .into_iter()
-            .filter_map(move |id| self.0.guilds.get(&id).map(|r| Ok(r.value().clone())));
+            .filter_map(move |id| (self.0).0.guilds.get(&id).map(|r| Ok(r.value().clone())));
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()

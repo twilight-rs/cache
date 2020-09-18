@@ -297,71 +297,71 @@ impl Backend for InMemoryBackend {
 
     /// A new instance of a repository for working with attachments.
     fn attachments(&self) -> Self::AttachmentRepository {
-        InMemoryAttachmentRepository(Arc::clone(&self.0))
+        InMemoryAttachmentRepository(self.clone())
     }
 
     /// A new instance of a repository for working with guild category channels.
     fn category_channels(&self) -> Self::CategoryChannelRepository {
-        InMemoryCategoryChannelRepository(Arc::clone(&self.0))
+        InMemoryCategoryChannelRepository(self.clone())
     }
 
     /// A new instance of a repository for working with emojis.
     fn emojis(&self) -> Self::EmojiRepository {
-        InMemoryEmojiRepository(Arc::clone(&self.0))
+        InMemoryEmojiRepository(self.clone())
     }
 
     /// A new instance of a repository for working with groups.
     fn groups(&self) -> Self::GroupRepository {
-        InMemoryGroupRepository(Arc::clone(&self.0))
+        InMemoryGroupRepository(self.clone())
     }
 
     /// A new instance of a repository for working with guilds.
     fn guilds(&self) -> Self::GuildRepository {
-        InMemoryGuildRepository(Arc::clone(&self.0))
+        InMemoryGuildRepository(self.clone())
     }
 
     /// A new instance of a repository for working with members.
     fn members(&self) -> Self::MemberRepository {
-        InMemoryMemberRepository(Arc::clone(&self.0))
+        InMemoryMemberRepository(self.clone())
     }
 
     /// A new instance of a repository for working with messages.
     fn messages(&self) -> Self::MessageRepository {
-        InMemoryMessageRepository(Arc::clone(&self.0))
+        InMemoryMessageRepository(self.clone())
     }
 
     /// A new instance of a repository for working with presences.
     fn presences(&self) -> Self::PresenceRepository {
-        InMemoryPresenceRepository(Arc::clone(&self.0))
+        InMemoryPresenceRepository(self.clone())
     }
 
     /// A new instance of a repository for working with private channels.
     fn private_channels(&self) -> Self::PrivateChannelRepository {
-        InMemoryPrivateChannelRepository(Arc::clone(&self.0))
+        InMemoryPrivateChannelRepository(self.clone())
     }
 
     /// A new instance of a repository for working with roles.
     fn roles(&self) -> Self::RoleRepository {
-        InMemoryRoleRepository(Arc::clone(&self.0))
+        InMemoryRoleRepository(self.clone())
     }
 
     /// A new instance of a repository for working with guild text channels.
     fn text_channels(&self) -> Self::TextChannelRepository {
-        InMemoryTextChannelRepository(Arc::clone(&self.0))
+        InMemoryTextChannelRepository(self.clone())
     }
 
     /// A new instance of a repository for working with users.
     fn users(&self) -> Self::UserRepository {
-        InMemoryUserRepository(Arc::clone(&self.0))
+        InMemoryUserRepository(self.clone())
     }
 
     /// A new instance of a repository for working with guild voice channels.
     fn voice_channels(&self) -> Self::VoiceChannelRepository {
-        InMemoryVoiceChannelRepository(Arc::clone(&self.0))
+        InMemoryVoiceChannelRepository(self.clone())
     }
 
     /// A new instance of a repository for working with voice states.
     fn voice_states(&self) -> Self::VoiceStateRepository {
-        InMemoryVoiceStateRepository(Arc::clone(&self.0))
+        InMemoryVoiceStateRepository(self.clone())
     }
 }

@@ -1,7 +1,7 @@
 use super::super::channel::VoiceChannelEntity;
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::id::{ChannelId, GuildId, UserId};
 
@@ -30,7 +30,7 @@ impl Entity for VoiceStateEntity {
     }
 }
 
-pub trait VoiceStateRepository<Error: 'static>: Repository<VoiceStateEntity, Error> {
+pub trait VoiceStateRepository<B: Backend>: Repository<VoiceStateEntity, B> {
     /// Retrieve the channel associated with a webhook.
     ///
     /// **Backend implementations**: if a voice state's channel ID is `None` or
@@ -40,5 +40,5 @@ pub trait VoiceStateRepository<Error: 'static>: Repository<VoiceStateEntity, Err
         &self,
         guild_id: GuildId,
         user_id: UserId,
-    ) -> GetEntityFuture<'_, VoiceChannelEntity, Error>;
+    ) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error>;
 }

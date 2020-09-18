@@ -1,7 +1,7 @@
 use super::{super::user::UserEntity, MessageEntity};
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::{
     channel::{ChannelType, PrivateChannel},
@@ -40,12 +40,10 @@ impl Entity for PrivateChannelEntity {
 }
 
 /// Repository to work with guild channels and their associated entities.
-pub trait PrivateChannelRepository<Error: 'static>:
-    Repository<PrivateChannelEntity, Error>
-{
+pub trait PrivateChannelRepository<B: Backend>: Repository<PrivateChannelEntity, B> {
     /// Retrieve the last message of a private channel.
-    fn last_message(&self, group_id: ChannelId) -> GetEntityFuture<'_, MessageEntity, Error>;
+    fn last_message(&self, group_id: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error>;
 
     /// Retrieve the recipient user associated with a private channel.
-    fn recipient(&self, channel_id: ChannelId) -> GetEntityFuture<'_, UserEntity, Error>;
+    fn recipient(&self, channel_id: ChannelId) -> GetEntityFuture<'_, UserEntity, B::Error>;
 }

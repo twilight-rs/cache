@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -13,21 +13,25 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::ChannelId;
 
 /// Repository to retrieve and work with voice channels and their related
 /// entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryVoiceChannelRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryVoiceChannelRepository(pub(crate) InMemoryBackend);
 
-impl Repository<VoiceChannelEntity, InMemoryBackendError> for InMemoryVoiceChannelRepository {
+impl Repository<VoiceChannelEntity, InMemoryBackend> for InMemoryVoiceChannelRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         user_id: ChannelId,
     ) -> GetEntityFuture<'_, VoiceChannelEntity, InMemoryBackendError> {
         future::ok(
             self.0
+                 .0
                 .channels_voice
                 .get(&user_id)
                 .map(|r| r.value().clone()),
@@ -36,8 +40,14 @@ impl Repository<VoiceChannelEntity, InMemoryBackendError> for InMemoryVoiceChann
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, VoiceChannelEntity, InMemoryBackendError> {
-        let stream =
-            stream::iter(self.0.channels_voice.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter(
+            (self.0)
+                .0
+                .channels_voice
+                .iter()
+                .map(|r| Ok(r.value().clone())),
+        )
+        .boxed();
 
         future::ok(stream).boxed()
     }
@@ -45,6 +55,7 @@ impl Repository<VoiceChannelEntity, InMemoryBackendError> for InMemoryVoiceChann
     fn remove(&self, user_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_VOICE)
@@ -52,7 +63,7 @@ impl Repository<VoiceChannelEntity, InMemoryBackendError> for InMemoryVoiceChann
             return future::ok(()).boxed();
         }
 
-        self.0.channels_voice.remove(&user_id);
+        (self.0).0.channels_voice.remove(&user_id);
 
         future::ok(()).boxed()
     }
@@ -60,6 +71,7 @@ impl Repository<VoiceChannelEntity, InMemoryBackendError> for InMemoryVoiceChann
     fn upsert(&self, entity: VoiceChannelEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_VOICE)
@@ -67,23 +79,24 @@ impl Repository<VoiceChannelEntity, InMemoryBackendError> for InMemoryVoiceChann
             return future::ok(()).boxed();
         }
 
-        self.0.channels_voice.insert(entity.id(), entity);
+        (self.0).0.channels_voice.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl VoiceChannelRepository<InMemoryBackendError> for InMemoryVoiceChannelRepository {
+impl VoiceChannelRepository<InMemoryBackend> for InMemoryVoiceChannelRepository {
     fn guild(
         &self,
         channel_id: ChannelId,
     ) -> GetEntityFuture<'_, GuildEntity, InMemoryBackendError> {
         let guild = self
             .0
+             .0
             .channels_voice
             .get(&channel_id)
             .and_then(|channel| channel.guild_id)
-            .and_then(|id| self.0.guilds.get(&id))
+            .and_then(|id| (self.0).0.guilds.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()
@@ -95,10 +108,11 @@ impl VoiceChannelRepository<InMemoryBackendError> for InMemoryVoiceChannelReposi
     ) -> GetEntityFuture<'_, CategoryChannelEntity, InMemoryBackendError> {
         let parent = self
             .0
+             .0
             .channels_voice
             .get(&channel_id)
             .and_then(|channel| channel.parent_id)
-            .and_then(|id| self.0.channels_category.get(&id))
+            .and_then(|id| (self.0).0.channels_category.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(parent).boxed()

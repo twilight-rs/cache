@@ -1,4 +1,4 @@
-use crate::{Entity, Repository};
+use crate::{Backend, Entity, Repository};
 use twilight_model::{
     gateway::presence::{Activity, ClientStatus, Status},
     id::{GuildId, UserId},
@@ -25,4 +25,4 @@ impl Entity for PresenceEntity {
     }
 }
 
-pub trait PresenceRepository<Error: 'static>: Repository<PresenceEntity, Error> {}
+pub trait PresenceRepository<B: Backend>: Repository<PresenceEntity, B> {}

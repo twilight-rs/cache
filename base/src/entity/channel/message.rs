@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::{
     channel::{
@@ -51,22 +51,24 @@ impl Entity for MessageEntity {
     }
 }
 
-pub trait MessageRepository<Error: 'static>: Repository<MessageEntity, Error> {
-    fn attachments(&self, message_id: MessageId)
-        -> ListEntitiesFuture<'_, AttachmentEntity, Error>;
+pub trait MessageRepository<B: Backend>: Repository<MessageEntity, B> {
+    fn attachments(
+        &self,
+        message_id: MessageId,
+    ) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error>;
 
-    fn author(&self, message_id: MessageId) -> GetEntityFuture<'_, UserEntity, Error>;
+    fn author(&self, message_id: MessageId) -> GetEntityFuture<'_, UserEntity, B::Error>;
 
-    fn channel(&self, message_id: MessageId) -> GetEntityFuture<'_, ChannelEntity, Error>;
+    fn channel(&self, message_id: MessageId) -> GetEntityFuture<'_, ChannelEntity, B::Error>;
 
-    fn guild(&self, message_id: MessageId) -> GetEntityFuture<'_, GuildEntity, Error>;
+    fn guild(&self, message_id: MessageId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
 
     fn mention_channels(
         &self,
         message_id: MessageId,
-    ) -> ListEntitiesFuture<'_, TextChannelEntity, Error>;
+    ) -> ListEntitiesFuture<'_, TextChannelEntity, B::Error>;
 
-    fn mention_roles(&self, message_id: MessageId) -> ListEntitiesFuture<'_, RoleEntity, Error>;
+    fn mention_roles(&self, message_id: MessageId) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
 
-    fn mentions(&self, message_id: MessageId) -> ListEntitiesFuture<'_, UserEntity, Error>;
+    fn mentions(&self, message_id: MessageId) -> ListEntitiesFuture<'_, UserEntity, B::Error>;
 }

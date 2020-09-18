@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -12,49 +12,62 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::{GuildId, UserId};
 
 /// Repository to retrieve and work with members and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryMemberRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryMemberRepository(pub(crate) InMemoryBackend);
 
-impl Repository<MemberEntity, InMemoryBackendError> for InMemoryMemberRepository {
+impl Repository<MemberEntity, InMemoryBackend> for InMemoryMemberRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         id: (GuildId, UserId),
     ) -> GetEntityFuture<'_, MemberEntity, InMemoryBackendError> {
-        future::ok(self.0.members.get(&id).map(|r| r.value().clone())).boxed()
+        future::ok((self.0).0.members.get(&id).map(|r| r.value().clone())).boxed()
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, MemberEntity, InMemoryBackendError> {
-        let stream = stream::iter(self.0.members.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter((self.0).0.members.iter().map(|r| Ok(r.value().clone()))).boxed();
 
         future::ok(stream).boxed()
     }
 
     fn remove(&self, id: (GuildId, UserId)) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::MEMBER) {
+        if !(self.0)
+            .0
+            .config
+            .entity_types()
+            .contains(EntityType::MEMBER)
+        {
             return future::ok(()).boxed();
         }
 
-        self.0.members.remove(&id);
+        (self.0).0.members.remove(&id);
 
         future::ok(()).boxed()
     }
 
     fn upsert(&self, entity: MemberEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::MEMBER) {
+        if !(self.0)
+            .0
+            .config
+            .entity_types()
+            .contains(EntityType::MEMBER)
+        {
             return future::ok(()).boxed();
         }
 
-        self.0.members.insert(entity.id(), entity);
+        (self.0).0.members.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl MemberRepository<InMemoryBackendError> for InMemoryMemberRepository {
+impl MemberRepository<InMemoryBackend> for InMemoryMemberRepository {
     fn hoisted_role(
         &self,
         guild_id: GuildId,
@@ -62,10 +75,11 @@ impl MemberRepository<InMemoryBackendError> for InMemoryMemberRepository {
     ) -> GetEntityFuture<'_, RoleEntity, InMemoryBackendError> {
         let role = self
             .0
+             .0
             .members
             .get(&(guild_id, user_id))
             .and_then(|member| member.hoisted_role)
-            .and_then(|id| self.0.roles.get(&id))
+            .and_then(|id| (self.0).0.roles.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(role).boxed()
@@ -76,14 +90,14 @@ impl MemberRepository<InMemoryBackendError> for InMemoryMemberRepository {
         guild_id: GuildId,
         user_id: UserId,
     ) -> ListEntitiesFuture<'_, RoleEntity, InMemoryBackendError> {
-        let role_ids = match self.0.members.get(&(guild_id, user_id)) {
+        let role_ids = match (self.0).0.members.get(&(guild_id, user_id)) {
             Some(member) => member.role_ids.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
         let iter = role_ids
             .into_iter()
-            .filter_map(move |id| self.0.roles.get(&id).map(|r| Ok(r.value().clone())));
+            .filter_map(move |id| (self.0).0.roles.get(&id).map(|r| Ok(r.value().clone())));
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()

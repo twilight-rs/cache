@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -17,12 +17,11 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::{ChannelId, MessageId};
 
 /// Repository to retrieve and work with messages and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryMessageRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryMessageRepository(pub(crate) InMemoryBackend);
 
 impl InMemoryMessageRepository {
     /// Insert a message into a channel's set of message IDs.
@@ -35,16 +34,16 @@ impl InMemoryMessageRepository {
     /// This means that an old message that was updated and was not previously
     /// in the cache may be inserted and then immediately removed.
     fn insert_message_id(&self, channel_id: ChannelId, message_id: MessageId) {
-        let cache_size = self.0.config.message_cache_size();
+        let cache_size = (self.0).0.config.message_cache_size();
 
         if cache_size == 0 {
             return;
         }
 
-        let mut channel_messages = self.0.channel_messages.entry(channel_id).or_default();
+        let mut channel_messages = (self.0).0.channel_messages.entry(channel_id).or_default();
         channel_messages.insert(message_id);
 
-        if channel_messages.len() < self.0.config.message_cache_size() {
+        if channel_messages.len() < (self.0).0.config.message_cache_size() {
             return;
         }
 
@@ -55,32 +54,50 @@ impl InMemoryMessageRepository {
         // `BTreeMap::first` instead.
         if let Some(oldest_message_id) = channel_messages.iter().next().copied() {
             channel_messages.remove(&oldest_message_id);
-            self.0.messages.remove(&oldest_message_id);
+            (self.0).0.messages.remove(&oldest_message_id);
         }
     }
 }
 
-impl Repository<MessageEntity, InMemoryBackendError> for InMemoryMessageRepository {
+impl Repository<MessageEntity, InMemoryBackend> for InMemoryMessageRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         message_id: MessageId,
     ) -> GetEntityFuture<'_, MessageEntity, InMemoryBackendError> {
-        future::ok(self.0.messages.get(&message_id).map(|r| r.value().clone())).boxed()
+        future::ok(
+            (self.0)
+                .0
+                .messages
+                .get(&message_id)
+                .map(|r| r.value().clone()),
+        )
+        .boxed()
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, MessageEntity, InMemoryBackendError> {
-        let stream = stream::iter(self.0.messages.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream =
+            stream::iter((self.0).0.messages.iter().map(|r| Ok(r.value().clone()))).boxed();
 
         future::ok(stream).boxed()
     }
 
     fn remove(&self, message_id: MessageId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::MESSAGE) {
+        if !(self.0)
+            .0
+            .config
+            .entity_types()
+            .contains(EntityType::MESSAGE)
+        {
             return future::ok(()).boxed();
         }
 
-        if let Some((_, message)) = self.0.messages.remove(&message_id) {
-            if let Some(mut channel_messages) = self.0.channel_messages.get_mut(&message.channel_id)
+        if let Some((_, message)) = (self.0).0.messages.remove(&message_id) {
+            if let Some(mut channel_messages) =
+                (self.0).0.channel_messages.get_mut(&message.channel_id)
             {
                 channel_messages.remove(&message_id);
             }
@@ -90,35 +107,44 @@ impl Repository<MessageEntity, InMemoryBackendError> for InMemoryMessageReposito
     }
 
     fn upsert(&self, entity: MessageEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
-        if !self.0.config.entity_types().contains(EntityType::MESSAGE) {
+        if !(self.0)
+            .0
+            .config
+            .entity_types()
+            .contains(EntityType::MESSAGE)
+        {
             return future::ok(()).boxed();
         }
 
         let channel_id = entity.channel_id;
 
-        if !self.0.messages.contains_key(&entity.id) {
+        if !(self.0).0.messages.contains_key(&entity.id) {
             self.insert_message_id(channel_id, entity.id);
         }
 
-        self.0.messages.insert(entity.id(), entity);
+        (self.0).0.messages.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
+impl MessageRepository<InMemoryBackend> for InMemoryMessageRepository {
     fn attachments(
         &self,
         message_id: MessageId,
     ) -> ListEntitiesFuture<'_, AttachmentEntity, InMemoryBackendError> {
-        let attachment_ids = match self.0.messages.get(&message_id) {
+        let attachment_ids = match (self.0).0.messages.get(&message_id) {
             Some(message) => message.attachments.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
-        let iter = attachment_ids
-            .into_iter()
-            .filter_map(move |id| self.0.attachments.get(&id).map(|r| Ok(r.value().clone())));
+        let iter = attachment_ids.into_iter().filter_map(move |id| {
+            (self.0)
+                .0
+                .attachments
+                .get(&id)
+                .map(|r| Ok(r.value().clone()))
+        });
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()
@@ -130,10 +156,11 @@ impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
     ) -> GetEntityFuture<'_, UserEntity, InMemoryBackendError> {
         let author = self
             .0
+             .0
             .messages
             .get(&message_id)
             .map(|message| message.author_id)
-            .and_then(|id| self.0.users.get(&id))
+            .and_then(|id| (self.0).0.users.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(author).boxed()
@@ -143,24 +170,24 @@ impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
         &self,
         message_id: MessageId,
     ) -> GetEntityFuture<'_, ChannelEntity, InMemoryBackendError> {
-        let id = match self.0.messages.get(&message_id) {
+        let id = match (self.0).0.messages.get(&message_id) {
             Some(message) => message.channel_id,
             None => return future::ok(None).boxed(),
         };
 
-        if let Some(r) = self.0.channels_text.get(&id) {
+        if let Some(r) = (self.0).0.channels_text.get(&id) {
             let entity = ChannelEntity::Guild(GuildChannelEntity::Text(r.value().clone()));
 
             return future::ok(Some(entity)).boxed();
         }
 
-        if let Some(r) = self.0.channels_private.get(&id) {
+        if let Some(r) = (self.0).0.channels_private.get(&id) {
             let entity = ChannelEntity::Private(r.value().clone());
 
             return future::ok(Some(entity)).boxed();
         }
 
-        if let Some(r) = self.0.groups.get(&id) {
+        if let Some(r) = (self.0).0.groups.get(&id) {
             let entity = ChannelEntity::Group(r.value().clone());
 
             return future::ok(Some(entity)).boxed();
@@ -175,10 +202,11 @@ impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
     ) -> GetEntityFuture<'_, GuildEntity, InMemoryBackendError> {
         let guild = self
             .0
+             .0
             .messages
             .get(&message_id)
             .and_then(|message| message.guild_id)
-            .and_then(|id| self.0.guilds.get(&id))
+            .and_then(|id| (self.0).0.guilds.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()
@@ -188,14 +216,18 @@ impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
         &self,
         message_id: MessageId,
     ) -> ListEntitiesFuture<'_, TextChannelEntity, InMemoryBackendError> {
-        let channel_ids = match self.0.messages.get(&message_id) {
+        let channel_ids = match (self.0).0.messages.get(&message_id) {
             Some(member) => member.mention_channels.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
-        let iter = channel_ids
-            .into_iter()
-            .filter_map(move |id| self.0.channels_text.get(&id).map(|r| Ok(r.value().clone())));
+        let iter = channel_ids.into_iter().filter_map(move |id| {
+            (self.0)
+                .0
+                .channels_text
+                .get(&id)
+                .map(|r| Ok(r.value().clone()))
+        });
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()
@@ -205,14 +237,14 @@ impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
         &self,
         message_id: MessageId,
     ) -> ListEntitiesFuture<'_, RoleEntity, InMemoryBackendError> {
-        let role_ids = match self.0.messages.get(&message_id) {
+        let role_ids = match (self.0).0.messages.get(&message_id) {
             Some(member) => member.mention_roles.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
         let iter = role_ids
             .into_iter()
-            .filter_map(move |id| self.0.roles.get(&id).map(|r| Ok(r.value().clone())));
+            .filter_map(move |id| (self.0).0.roles.get(&id).map(|r| Ok(r.value().clone())));
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()
@@ -222,14 +254,14 @@ impl MessageRepository<InMemoryBackendError> for InMemoryMessageRepository {
         &self,
         message_id: MessageId,
     ) -> ListEntitiesFuture<'_, UserEntity, InMemoryBackendError> {
-        let user_ids = match self.0.messages.get(&message_id) {
+        let user_ids = match (self.0).0.messages.get(&message_id) {
             Some(member) => member.mentions.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
         let iter = user_ids
             .into_iter()
-            .filter_map(move |id| self.0.users.get(&id).map(|r| Ok(r.value().clone())));
+            .filter_map(move |id| (self.0).0.users.get(&id).map(|r| Ok(r.value().clone())));
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()

@@ -9,22 +9,22 @@ use super::entity::{
     voice::VoiceStateRepository,
 };
 
-pub trait Backend {
+pub trait Backend: Sized {
     type Error: 'static;
-    type AttachmentRepository: AttachmentRepository<Self::Error>;
-    type CategoryChannelRepository: CategoryChannelRepository<Self::Error>;
-    type EmojiRepository: EmojiRepository<Self::Error>;
-    type GroupRepository: GroupRepository<Self::Error>;
-    type GuildRepository: GuildRepository<Self::Error>;
-    type MemberRepository: MemberRepository<Self::Error>;
-    type MessageRepository: MessageRepository<Self::Error>;
-    type PresenceRepository: PresenceRepository<Self::Error>;
-    type PrivateChannelRepository: PrivateChannelRepository<Self::Error>;
-    type RoleRepository: RoleRepository<Self::Error>;
-    type TextChannelRepository: TextChannelRepository<Self::Error>;
-    type UserRepository: UserRepository<Self::Error>;
-    type VoiceChannelRepository: VoiceChannelRepository<Self::Error>;
-    type VoiceStateRepository: VoiceStateRepository<Self::Error>;
+    type AttachmentRepository: AttachmentRepository<Self>;
+    type CategoryChannelRepository: CategoryChannelRepository<Self>;
+    type EmojiRepository: EmojiRepository<Self>;
+    type GroupRepository: GroupRepository<Self>;
+    type GuildRepository: GuildRepository<Self>;
+    type MemberRepository: MemberRepository<Self>;
+    type MessageRepository: MessageRepository<Self>;
+    type PresenceRepository: PresenceRepository<Self>;
+    type PrivateChannelRepository: PrivateChannelRepository<Self>;
+    type RoleRepository: RoleRepository<Self>;
+    type TextChannelRepository: TextChannelRepository<Self>;
+    type UserRepository: UserRepository<Self>;
+    type VoiceChannelRepository: VoiceChannelRepository<Self>;
+    type VoiceStateRepository: VoiceStateRepository<Self>;
 
     /// Return a new instance of the backend's attachment repository
     /// implementation.

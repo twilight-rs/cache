@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -13,20 +13,24 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::ChannelId;
 
 /// Repository to retrieve and work with category channels and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryCategoryChannelRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryCategoryChannelRepository(pub(crate) InMemoryBackend);
 
-impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategoryChannelRepository {
+impl Repository<CategoryChannelEntity, InMemoryBackend> for InMemoryCategoryChannelRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         channel_id: ChannelId,
     ) -> GetEntityFuture<'_, CategoryChannelEntity, InMemoryBackendError> {
         future::ok(
             self.0
+                 .0
                 .channels_category
                 .get(&channel_id)
                 .map(|r| r.value().clone()),
@@ -37,6 +41,7 @@ impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategor
     fn list(&self) -> ListEntitiesFuture<'_, CategoryChannelEntity, InMemoryBackendError> {
         let iter = stream::iter(
             self.0
+                 .0
                 .channels_category
                 .iter()
                 .map(|r| Ok(r.value().clone())),
@@ -49,6 +54,7 @@ impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategor
     fn remove(&self, channel_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_CATEGORY)
@@ -56,7 +62,7 @@ impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategor
             return future::ok(()).boxed();
         }
 
-        self.0.channels_category.remove(&channel_id);
+        (self.0).0.channels_category.remove(&channel_id);
 
         future::ok(()).boxed()
     }
@@ -67,6 +73,7 @@ impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategor
     ) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_CATEGORY)
@@ -75,6 +82,7 @@ impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategor
         }
 
         self.0
+             .0
             .channels_category
             .insert(category_channel.id(), category_channel);
 
@@ -82,17 +90,18 @@ impl Repository<CategoryChannelEntity, InMemoryBackendError> for InMemoryCategor
     }
 }
 
-impl CategoryChannelRepository<InMemoryBackendError> for InMemoryCategoryChannelRepository {
+impl CategoryChannelRepository<InMemoryBackend> for InMemoryCategoryChannelRepository {
     fn guild(
         &self,
         channel_id: ChannelId,
     ) -> GetEntityFuture<'_, GuildEntity, InMemoryBackendError> {
         let guild = self
             .0
+             .0
             .channels_category
             .get(&channel_id)
             .and_then(|channel| channel.guild_id)
-            .and_then(|id| self.0.guilds.get(&id))
+            .and_then(|id| (self.0).0.guilds.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()

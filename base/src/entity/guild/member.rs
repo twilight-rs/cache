@@ -1,7 +1,7 @@
 use super::role::RoleEntity;
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
-    Entity,
+    Backend, Entity,
 };
 use twilight_model::{
     guild::Member,
@@ -47,13 +47,13 @@ impl Entity for MemberEntity {
     }
 }
 
-pub trait MemberRepository<Error: 'static>: Repository<MemberEntity, Error> {
+pub trait MemberRepository<B: Backend>: Repository<MemberEntity, B> {
     /// Retrieve the hoisted role associated with a role.
     fn hoisted_role(
         &self,
         guild_id: GuildId,
         user_id: UserId,
-    ) -> GetEntityFuture<'_, RoleEntity, Error>;
+    ) -> GetEntityFuture<'_, RoleEntity, B::Error>;
 
     /// Retrieve a stream of roles associated with a member.
     ///
@@ -63,5 +63,5 @@ pub trait MemberRepository<Error: 'static>: Repository<MemberEntity, Error> {
         &self,
         guild_id: GuildId,
         user_id: UserId,
-    ) -> ListEntitiesFuture<'_, RoleEntity, Error>;
+    ) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
 }

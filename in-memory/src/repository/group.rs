@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -13,20 +13,23 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::ChannelId;
 
 /// Repository to retrieve and work with groups and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryGroupRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryGroupRepository(pub(crate) InMemoryBackend);
 
-impl Repository<GroupEntity, InMemoryBackendError> for InMemoryGroupRepository {
+impl Repository<GroupEntity, InMemoryBackend> for InMemoryGroupRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(&self, group_id: ChannelId) -> GetEntityFuture<'_, GroupEntity, InMemoryBackendError> {
-        future::ok(self.0.groups.get(&group_id).map(|r| r.value().clone())).boxed()
+        future::ok((self.0).0.groups.get(&group_id).map(|r| r.value().clone())).boxed()
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, GroupEntity, InMemoryBackendError> {
-        let stream = stream::iter(self.0.groups.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter((self.0).0.groups.iter().map(|r| Ok(r.value().clone()))).boxed();
 
         future::ok(stream).boxed()
     }
@@ -34,6 +37,7 @@ impl Repository<GroupEntity, InMemoryBackendError> for InMemoryGroupRepository {
     fn remove(&self, group_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_GROUP)
@@ -41,7 +45,7 @@ impl Repository<GroupEntity, InMemoryBackendError> for InMemoryGroupRepository {
             return future::ok(()).boxed();
         }
 
-        self.0.groups.remove(&group_id);
+        (self.0).0.groups.remove(&group_id);
 
         future::ok(()).boxed()
     }
@@ -49,6 +53,7 @@ impl Repository<GroupEntity, InMemoryBackendError> for InMemoryGroupRepository {
     fn upsert(&self, entity: GroupEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_GROUP)
@@ -56,23 +61,24 @@ impl Repository<GroupEntity, InMemoryBackendError> for InMemoryGroupRepository {
             return future::ok(()).boxed();
         }
 
-        self.0.groups.insert(entity.id(), entity);
+        (self.0).0.groups.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl GroupRepository<InMemoryBackendError> for InMemoryGroupRepository {
+impl GroupRepository<InMemoryBackend> for InMemoryGroupRepository {
     fn last_message(
         &self,
         group_id: ChannelId,
     ) -> GetEntityFuture<'_, MessageEntity, InMemoryBackendError> {
         let message = self
             .0
+             .0
             .groups
             .get(&group_id)
             .and_then(|group| group.last_message_id)
-            .and_then(|id| self.0.messages.get(&id))
+            .and_then(|id| (self.0).0.messages.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(message).boxed()
@@ -81,10 +87,11 @@ impl GroupRepository<InMemoryBackendError> for InMemoryGroupRepository {
     fn owner(&self, group_id: ChannelId) -> GetEntityFuture<'_, UserEntity, InMemoryBackendError> {
         let guild = self
             .0
+             .0
             .groups
             .get(&group_id)
             .map(|message| message.owner_id)
-            .and_then(|id| self.0.users.get(&id))
+            .and_then(|id| (self.0).0.users.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()
@@ -94,14 +101,14 @@ impl GroupRepository<InMemoryBackendError> for InMemoryGroupRepository {
         &self,
         group_id: ChannelId,
     ) -> ListEntitiesFuture<'_, UserEntity, InMemoryBackendError> {
-        let recipient_ids = match self.0.groups.get(&group_id) {
+        let recipient_ids = match (self.0).0.groups.get(&group_id) {
             Some(group) => group.recipient_ids.clone(),
             None => return future::ok(stream::empty().boxed()).boxed(),
         };
 
         let iter = recipient_ids
             .into_iter()
-            .filter_map(move |id| self.0.users.get(&id).map(|r| Ok(r.value().clone())));
+            .filter_map(move |id| (self.0).0.users.get(&id).map(|r| Ok(r.value().clone())));
         let stream = stream::iter(iter).boxed();
 
         future::ok(stream).boxed()

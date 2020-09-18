@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -13,21 +13,25 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::ChannelId;
 
 /// Repository to retrieve and work with text channels and their related
 /// entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryTextChannelRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryTextChannelRepository(pub(crate) InMemoryBackend);
 
-impl Repository<TextChannelEntity, InMemoryBackendError> for InMemoryTextChannelRepository {
+impl Repository<TextChannelEntity, InMemoryBackend> for InMemoryTextChannelRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         channel_id: ChannelId,
     ) -> GetEntityFuture<'_, TextChannelEntity, InMemoryBackendError> {
         future::ok(
             self.0
+                 .0
                 .channels_text
                 .get(&channel_id)
                 .map(|r| r.value().clone()),
@@ -36,8 +40,14 @@ impl Repository<TextChannelEntity, InMemoryBackendError> for InMemoryTextChannel
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, TextChannelEntity, InMemoryBackendError> {
-        let stream =
-            stream::iter(self.0.channels_text.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream = stream::iter(
+            (self.0)
+                .0
+                .channels_text
+                .iter()
+                .map(|r| Ok(r.value().clone())),
+        )
+        .boxed();
 
         future::ok(stream).boxed()
     }
@@ -45,6 +55,7 @@ impl Repository<TextChannelEntity, InMemoryBackendError> for InMemoryTextChannel
     fn remove(&self, channel_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_TEXT)
@@ -52,7 +63,7 @@ impl Repository<TextChannelEntity, InMemoryBackendError> for InMemoryTextChannel
             return future::ok(()).boxed();
         }
 
-        self.0.channels_text.remove(&channel_id);
+        (self.0).0.channels_text.remove(&channel_id);
 
         future::ok(()).boxed()
     }
@@ -60,6 +71,7 @@ impl Repository<TextChannelEntity, InMemoryBackendError> for InMemoryTextChannel
     fn upsert(&self, entity: TextChannelEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::CHANNEL_TEXT)
@@ -67,23 +79,24 @@ impl Repository<TextChannelEntity, InMemoryBackendError> for InMemoryTextChannel
             return future::ok(()).boxed();
         }
 
-        self.0.channels_text.insert(entity.id(), entity);
+        (self.0).0.channels_text.insert(entity.id(), entity);
 
         future::ok(()).boxed()
     }
 }
 
-impl TextChannelRepository<InMemoryBackendError> for InMemoryTextChannelRepository {
+impl TextChannelRepository<InMemoryBackend> for InMemoryTextChannelRepository {
     fn guild(
         &self,
         channel_id: ChannelId,
     ) -> GetEntityFuture<'_, GuildEntity, InMemoryBackendError> {
         let guild = self
             .0
+             .0
             .channels_text
             .get(&channel_id)
             .and_then(|channel| channel.guild_id)
-            .and_then(|id| self.0.guilds.get(&id))
+            .and_then(|id| (self.0).0.guilds.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()
@@ -95,10 +108,11 @@ impl TextChannelRepository<InMemoryBackendError> for InMemoryTextChannelReposito
     ) -> GetEntityFuture<'_, MessageEntity, InMemoryBackendError> {
         let message = self
             .0
+             .0
             .channels_text
             .get(&channel_id)
             .and_then(|channel| channel.last_message_id)
-            .and_then(|id| self.0.messages.get(&id))
+            .and_then(|id| (self.0).0.messages.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(message).boxed()
@@ -110,10 +124,11 @@ impl TextChannelRepository<InMemoryBackendError> for InMemoryTextChannelReposito
     ) -> GetEntityFuture<'_, CategoryChannelEntity, InMemoryBackendError> {
         let parent = self
             .0
+             .0
             .channels_text
             .get(&channel_id)
             .and_then(|channel| channel.parent_id)
-            .and_then(|id| self.0.channels_category.get(&id))
+            .and_then(|id| (self.0).0.channels_category.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(parent).boxed()

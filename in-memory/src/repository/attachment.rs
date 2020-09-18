@@ -1,4 +1,4 @@
-use crate::{config::EntityType, InMemoryBackendError, InMemoryBackendRef};
+use crate::{config::EntityType, InMemoryBackend, InMemoryBackendError};
 use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
@@ -12,20 +12,24 @@ use rarity_cache::{
         GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, Repository, UpsertEntityFuture,
     },
 };
-use std::sync::Arc;
 use twilight_model::id::AttachmentId;
 
 /// Repository to retrieve and work with attachments and their related entities.
 #[derive(Clone, Debug)]
-pub struct InMemoryAttachmentRepository(pub(crate) Arc<InMemoryBackendRef>);
+pub struct InMemoryAttachmentRepository(pub(crate) InMemoryBackend);
 
-impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRepository {
+impl Repository<AttachmentEntity, InMemoryBackend> for InMemoryAttachmentRepository {
+    fn backend(&self) -> &InMemoryBackend {
+        &self.0
+    }
+
     fn get(
         &self,
         attachment_id: AttachmentId,
     ) -> GetEntityFuture<'_, AttachmentEntity, InMemoryBackendError> {
         future::ok(
-            self.0
+            (self.0)
+                .0
                 .attachments
                 .get(&attachment_id)
                 .map(|r| r.value().clone()),
@@ -34,7 +38,8 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, AttachmentEntity, InMemoryBackendError> {
-        let stream = stream::iter(self.0.attachments.iter().map(|r| Ok(r.value().clone()))).boxed();
+        let stream =
+            stream::iter((self.0).0.attachments.iter().map(|r| Ok(r.value().clone()))).boxed();
 
         future::ok(stream).boxed()
     }
@@ -42,6 +47,7 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
     fn remove(&self, attachment_id: AttachmentId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::ATTACHMENT)
@@ -49,7 +55,7 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
             return future::ok(()).boxed();
         }
 
-        self.0.attachments.remove(&attachment_id);
+        (self.0).0.attachments.remove(&attachment_id);
 
         future::ok(()).boxed()
     }
@@ -60,6 +66,7 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
     ) -> UpsertEntityFuture<'_, InMemoryBackendError> {
         if !self
             .0
+             .0
             .config
             .entity_types()
             .contains(EntityType::ATTACHMENT)
@@ -68,6 +75,7 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
         }
 
         self.0
+             .0
             .attachments
             .insert(category_channel.id(), category_channel);
 
@@ -75,17 +83,18 @@ impl Repository<AttachmentEntity, InMemoryBackendError> for InMemoryAttachmentRe
     }
 }
 
-impl AttachmentRepository<InMemoryBackendError> for InMemoryAttachmentRepository {
+impl AttachmentRepository<InMemoryBackend> for InMemoryAttachmentRepository {
     fn message(
         &self,
         attachment_id: AttachmentId,
     ) -> GetEntityFuture<'_, MessageEntity, InMemoryBackendError> {
         let message = self
             .0
+             .0
             .attachments
             .get(&attachment_id)
             .map(|attachment| attachment.message_id)
-            .and_then(|id| self.0.messages.get(&id))
+            .and_then(|id| (self.0).0.messages.get(&id))
             .map(|r| r.value().clone());
 
         future::ok(message).boxed()
