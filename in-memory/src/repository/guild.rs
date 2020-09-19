@@ -39,10 +39,6 @@ impl Repository<GuildEntity, InMemoryBackend> for InMemoryGuildRepository {
     }
 
     fn remove(&self, guild_id: GuildId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !(self.0).0.config.entity_types().contains(EntityType::GUILD) {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.guilds.remove(&guild_id);
 
         future::ok(()).boxed()

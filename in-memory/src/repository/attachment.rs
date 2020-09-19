@@ -45,16 +45,6 @@ impl Repository<AttachmentEntity, InMemoryBackend> for InMemoryAttachmentReposit
     }
 
     fn remove(&self, attachment_id: AttachmentId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::ATTACHMENT)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.attachments.remove(&attachment_id);
 
         future::ok(()).boxed()

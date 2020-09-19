@@ -86,15 +86,6 @@ impl Repository<MessageEntity, InMemoryBackend> for InMemoryMessageRepository {
     }
 
     fn remove(&self, message_id: MessageId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !(self.0)
-            .0
-            .config
-            .entity_types()
-            .contains(EntityType::MESSAGE)
-        {
-            return future::ok(()).boxed();
-        }
-
         if let Some((_, message)) = (self.0).0.messages.remove(&message_id) {
             if let Some(mut channel_messages) =
                 (self.0).0.channel_messages.get_mut(&message.channel_id)

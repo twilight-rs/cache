@@ -53,16 +53,6 @@ impl Repository<TextChannelEntity, InMemoryBackend> for InMemoryTextChannelRepos
     }
 
     fn remove(&self, channel_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::CHANNEL_TEXT)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.channels_text.remove(&channel_id);
 
         future::ok(()).boxed()

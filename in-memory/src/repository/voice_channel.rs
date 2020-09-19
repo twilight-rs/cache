@@ -53,16 +53,6 @@ impl Repository<VoiceChannelEntity, InMemoryBackend> for InMemoryVoiceChannelRep
     }
 
     fn remove(&self, user_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::CHANNEL_VOICE)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.channels_voice.remove(&user_id);
 
         future::ok(()).boxed()

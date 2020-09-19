@@ -34,10 +34,6 @@ impl Repository<RoleEntity, InMemoryBackend> for InMemoryRoleRepository {
     }
 
     fn remove(&self, role_id: RoleId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !(self.0).0.config.entity_types().contains(EntityType::ROLE) {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.roles.remove(&role_id);
 
         future::ok(()).boxed()

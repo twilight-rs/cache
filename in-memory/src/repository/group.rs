@@ -35,16 +35,6 @@ impl Repository<GroupEntity, InMemoryBackend> for InMemoryGroupRepository {
     }
 
     fn remove(&self, group_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::CHANNEL_GROUP)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.groups.remove(&group_id);
 
         future::ok(()).boxed()

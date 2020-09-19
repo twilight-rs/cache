@@ -36,10 +36,6 @@ impl Repository<UserEntity, InMemoryBackend> for InMemoryUserRepository {
     }
 
     fn remove(&self, user_id: UserId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !(self.0).0.config.entity_types().contains(EntityType::USER) {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.users.remove(&user_id);
 
         future::ok(()).boxed()

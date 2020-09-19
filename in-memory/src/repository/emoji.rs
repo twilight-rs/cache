@@ -35,10 +35,6 @@ impl Repository<EmojiEntity, InMemoryBackend> for InMemoryEmojiRepository {
     }
 
     fn remove(&self, emoji_id: EmojiId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !(self.0).0.config.entity_types().contains(EntityType::EMOJI) {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.emojis.remove(&emoji_id);
 
         future::ok(()).boxed()

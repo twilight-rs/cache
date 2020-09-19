@@ -52,16 +52,6 @@ impl Repository<CategoryChannelEntity, InMemoryBackend> for InMemoryCategoryChan
     }
 
     fn remove(&self, channel_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::CHANNEL_CATEGORY)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.channels_category.remove(&channel_id);
 
         future::ok(()).boxed()

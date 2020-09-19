@@ -48,15 +48,6 @@ impl Repository<PresenceEntity, InMemoryBackend> for InMemoryPresenceRepository 
         &self,
         presence_id: (GuildId, UserId),
     ) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !(self.0)
-            .0
-            .config
-            .entity_types()
-            .contains(EntityType::PRESENCE)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.presences.remove(&presence_id);
 
         future::ok(()).boxed()

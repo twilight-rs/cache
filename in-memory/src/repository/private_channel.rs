@@ -53,16 +53,6 @@ impl Repository<PrivateChannelEntity, InMemoryBackend> for InMemoryPrivateChanne
     }
 
     fn remove(&self, channel_id: ChannelId) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::CHANNEL_PRIVATE)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.channels_private.remove(&channel_id);
 
         future::ok(()).boxed()

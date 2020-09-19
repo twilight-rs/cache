@@ -56,16 +56,6 @@ impl Repository<VoiceStateEntity, InMemoryBackend> for InMemoryVoiceStateReposit
         &self,
         voice_state_id: (GuildId, UserId),
     ) -> RemoveEntityFuture<'_, InMemoryBackendError> {
-        if !self
-            .0
-             .0
-            .config
-            .entity_types()
-            .contains(EntityType::VOICE_STATE)
-        {
-            return future::ok(()).boxed();
-        }
-
         (self.0).0.voice_states.remove(&voice_state_id);
 
         future::ok(()).boxed()
