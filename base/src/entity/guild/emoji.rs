@@ -42,7 +42,14 @@ pub trait EmojiRepository<B: Backend>: Repository<EmojiEntity, B> {
     }
 
     /// Retrieve a stream of roles associated with an emoji.
-    fn roles(&self, emoji_id: EmojiId) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
+    fn roles(&self, emoji_id: EmojiId) -> ListEntitiesFuture<'_, RoleEntity, B::Error> {
+        utils::stream(
+            self.backend().emojis(),
+            self.backend().roles(),
+            emoji_id,
+            |emoji| emoji.role_ids.into_iter(),
+        )
+    }
 
     /// Retrieve the user associated with an emoji.
     fn user(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, UserEntity, B::Error> {

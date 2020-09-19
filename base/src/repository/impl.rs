@@ -1,11 +1,7 @@
 use super::{
     super::{backend::Backend, entity::Entity},
-    GetEntityFuture,
-    ListEntitiesFuture,
-    RemoveEntitiesFuture,
-    RemoveEntityFuture,
-    UpsertEntitiesFuture,
-    UpsertEntityFuture,
+    GetEntityFuture, ListEntitiesFuture, RemoveEntitiesFuture, RemoveEntityFuture,
+    UpsertEntitiesFuture, UpsertEntityFuture,
 };
 use futures_util::future::{self, FutureExt, TryFutureExt};
 

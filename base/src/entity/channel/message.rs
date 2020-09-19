@@ -55,7 +55,14 @@ pub trait MessageRepository<B: Backend>: Repository<MessageEntity, B> + Send {
     fn attachments(
         &self,
         message_id: MessageId,
-    ) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error>;
+    ) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error> {
+        utils::stream(
+            self.backend().messages(),
+            self.backend().attachments(),
+            message_id,
+            |message| message.attachments.into_iter(),
+        )
+    }
 
     fn author(&self, message_id: MessageId) -> GetEntityFuture<'_, UserEntity, B::Error> {
         utils::relation_map(
@@ -80,9 +87,30 @@ pub trait MessageRepository<B: Backend>: Repository<MessageEntity, B> + Send {
     fn mention_channels(
         &self,
         message_id: MessageId,
-    ) -> ListEntitiesFuture<'_, TextChannelEntity, B::Error>;
+    ) -> ListEntitiesFuture<'_, TextChannelEntity, B::Error> {
+        utils::stream(
+            self.backend().messages(),
+            self.backend().text_channels(),
+            message_id,
+            |message| message.mention_channels.into_iter(),
+        )
+    }
 
-    fn mention_roles(&self, message_id: MessageId) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
+    fn mention_roles(&self, message_id: MessageId) -> ListEntitiesFuture<'_, RoleEntity, B::Error> {
+        utils::stream(
+            self.backend().messages(),
+            self.backend().roles(),
+            message_id,
+            |message| message.mention_roles.into_iter(),
+        )
+    }
 
-    fn mentions(&self, message_id: MessageId) -> ListEntitiesFuture<'_, UserEntity, B::Error>;
+    fn mentions(&self, message_id: MessageId) -> ListEntitiesFuture<'_, UserEntity, B::Error> {
+        utils::stream(
+            self.backend().messages(),
+            self.backend().users(),
+            message_id,
+            |message| message.mentions.into_iter(),
+        )
+    }
 }

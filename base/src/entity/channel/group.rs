@@ -69,5 +69,12 @@ pub trait GroupRepository<B: Backend>: Repository<GroupEntity, B> {
     }
 
     /// Retrieve a stream of recipients associated with a group.
-    fn recipients(&self, group_id: ChannelId) -> ListEntitiesFuture<'_, UserEntity, B::Error>;
+    fn recipients(&self, group_id: ChannelId) -> ListEntitiesFuture<'_, UserEntity, B::Error> {
+        utils::stream(
+            self.backend().groups(),
+            self.backend().users(),
+            group_id,
+            |group| group.recipient_ids.into_iter(),
+        )
+    }
 }

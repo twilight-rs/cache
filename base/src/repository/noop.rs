@@ -17,23 +17,20 @@ use super::{
                 emoji::{EmojiEntity, EmojiRepository},
                 member::{MemberEntity, MemberRepository},
                 role::{RoleEntity, RoleRepository},
-                GuildEntity,
-                GuildRepository,
+                GuildEntity, GuildRepository,
             },
             user::{UserEntity, UserRepository},
             voice::{VoiceStateEntity, VoiceStateRepository},
             Entity,
         },
     },
-    GetEntityFuture,
-    ListEntitiesFuture,
-    RemoveEntitiesFuture,
-    RemoveEntityFuture,
-    Repository,
-    UpsertEntitiesFuture,
-    UpsertEntityFuture,
+    GetEntityFuture, ListEntitiesFuture, RemoveEntitiesFuture, RemoveEntityFuture, Repository,
+    UpsertEntitiesFuture, UpsertEntityFuture,
 };
-use futures_util::{future::{self, FutureExt}, stream::{self, StreamExt}};
+use futures_util::{
+    future::{self, FutureExt},
+    stream::{self, StreamExt},
+};
 use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, RoleId, UserId};
 
 /// Repository that implements no operations: when called it will do nothing.
@@ -87,10 +84,7 @@ impl<B: Backend, E: Entity + 'static> Repository<E, B> for NoopRepository<B> {
     }
 
     /// Always does nothing.
-    fn remove_bulk<T: Iterator<Item = E::Id>>(
-        &self,
-        _: T,
-    ) -> RemoveEntitiesFuture<'_, B::Error> {
+    fn remove_bulk<T: Iterator<Item = E::Id>>(&self, _: T) -> RemoveEntitiesFuture<'_, B::Error> {
         future::ok(()).boxed()
     }
 
@@ -152,7 +146,10 @@ impl<B: Backend + Send> GuildRepository<B> for NoopRepository<B> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
-    fn channels(&self, _: GuildId) -> ListEntitiesFuture<'_, crate::entity::channel::GuildChannelEntity, B::Error> {
+    fn channels(
+        &self,
+        _: GuildId,
+    ) -> ListEntitiesFuture<'_, crate::entity::channel::GuildChannelEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
@@ -196,17 +193,15 @@ impl<B: Backend + Send> GuildRepository<B> for NoopRepository<B> {
         future::ok(None).boxed()
     }
 
-    fn system_channel(&self, _: GuildId)
-        -> GetEntityFuture<'_, TextChannelEntity, B::Error> {
-            future::ok(None).boxed()
+    fn system_channel(&self, _: GuildId) -> GetEntityFuture<'_, TextChannelEntity, B::Error> {
+        future::ok(None).boxed()
     }
 
     fn voice_state_ids(&self, _: GuildId) -> super::ListEntityIdsFuture<'_, UserId, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
-    fn voice_states(&self, _: GuildId)
-        -> ListEntitiesFuture<'_, VoiceStateEntity, B::Error> {
+    fn voice_states(&self, _: GuildId) -> ListEntitiesFuture<'_, VoiceStateEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
@@ -219,32 +214,24 @@ impl<B: Backend + Send> GuildRepository<B> for NoopRepository<B> {
 }
 
 impl<B: Backend + Send> MemberRepository<B> for NoopRepository<B> {
-    fn hoisted_role(
-        &self,
-        _: GuildId,
-        _: UserId,
-    ) -> GetEntityFuture<'_, RoleEntity, B::Error> {
+    fn hoisted_role(&self, _: GuildId, _: UserId) -> GetEntityFuture<'_, RoleEntity, B::Error> {
         future::ok(None).boxed()
     }
 
-    fn roles(
-        &self,
-        _: GuildId,
-        _: UserId,
-    ) -> ListEntitiesFuture<'_, RoleEntity, B::Error> {
+    fn roles(&self, _: GuildId, _: UserId) -> ListEntitiesFuture<'_, RoleEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 }
 
 impl<B: Backend + Send> MessageRepository<B> for NoopRepository<B> {
-    fn attachments(
-        &self,
-        _: MessageId,
-    ) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error> {
+    fn attachments(&self, _: MessageId) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
-    fn author(&self, _: MessageId) -> GetEntityFuture<'_, crate::entity::user::UserEntity, B::Error> {
+    fn author(
+        &self,
+        _: MessageId,
+    ) -> GetEntityFuture<'_, crate::entity::user::UserEntity, B::Error> {
         future::ok(None).boxed()
     }
 
@@ -252,7 +239,10 @@ impl<B: Backend + Send> MessageRepository<B> for NoopRepository<B> {
         future::ok(None).boxed()
     }
 
-    fn guild(&self, _: MessageId) -> GetEntityFuture<'_, crate::entity::guild::GuildEntity, B::Error> {
+    fn guild(
+        &self,
+        _: MessageId,
+    ) -> GetEntityFuture<'_, crate::entity::guild::GuildEntity, B::Error> {
         future::ok(None).boxed()
     }
 
@@ -263,17 +253,22 @@ impl<B: Backend + Send> MessageRepository<B> for NoopRepository<B> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
-    fn mention_roles(&self, _: MessageId) -> ListEntitiesFuture<'_, crate::entity::guild::RoleEntity, B::Error> {
+    fn mention_roles(
+        &self,
+        _: MessageId,
+    ) -> ListEntitiesFuture<'_, crate::entity::guild::RoleEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 
-    fn mentions(&self, _: MessageId) -> ListEntitiesFuture<'_, crate::entity::user::UserEntity, B::Error> {
+    fn mentions(
+        &self,
+        _: MessageId,
+    ) -> ListEntitiesFuture<'_, crate::entity::user::UserEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
 }
 
-impl<B: Backend + Send> PresenceRepository<B> for NoopRepository<B> {
-}
+impl<B: Backend + Send> PresenceRepository<B> for NoopRepository<B> {}
 
 impl<B: Backend + Send> PrivateChannelRepository<B> for NoopRepository<B> {
     fn last_message(&self, _: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error> {
@@ -300,10 +295,7 @@ impl<B: Backend + Send> TextChannelRepository<B> for NoopRepository<B> {
         future::ok(None).boxed()
     }
 
-    fn parent(
-        &self,
-        _: ChannelId,
-    ) -> GetEntityFuture<'_, CategoryChannelEntity, B::Error> {
+    fn parent(&self, _: ChannelId) -> GetEntityFuture<'_, CategoryChannelEntity, B::Error> {
         future::ok(None).boxed()
     }
 }
@@ -323,20 +315,13 @@ impl<B: Backend + Send> VoiceChannelRepository<B> for NoopRepository<B> {
         future::ok(None).boxed()
     }
 
-    fn parent(
-        &self,
-        _: ChannelId,
-    ) -> GetEntityFuture<'_, CategoryChannelEntity, B::Error> {
+    fn parent(&self, _: ChannelId) -> GetEntityFuture<'_, CategoryChannelEntity, B::Error> {
         future::ok(None).boxed()
     }
 }
 
 impl<B: Backend + Send> VoiceStateRepository<B> for NoopRepository<B> {
-    fn channel(
-        &self,
-        _: GuildId,
-        _: UserId,
-    ) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error> {
+    fn channel(&self, _: GuildId, _: UserId) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error> {
         future::ok(None).boxed()
     }
 }

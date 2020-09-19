@@ -70,5 +70,12 @@ pub trait MemberRepository<B: Backend>: Repository<MemberEntity, B> {
         &self,
         guild_id: GuildId,
         user_id: UserId,
-    ) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
+    ) -> ListEntitiesFuture<'_, RoleEntity, B::Error> {
+        utils::stream(
+            self.backend().members(),
+            self.backend().roles(),
+            (guild_id, user_id),
+            |member| member.role_ids.into_iter(),
+        )
+    }
 }

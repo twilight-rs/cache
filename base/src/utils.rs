@@ -1,8 +1,9 @@
 use super::{
     backend::Backend,
     entity::Entity,
-    repository::{GetEntityFuture, Repository},
+    repository::{GetEntityFuture, ListEntitiesFuture, Repository},
 };
+use futures_util::stream::{self, StreamExt};
 
 pub fn relation_and_then<
     B: Backend + 'static,
@@ -62,10 +63,53 @@ where
     })
 }
 
-// pub fn stream<'a, E: Send + 'a, K: Eq + Hash + Send, V: Clone + Send>(
-//     map: &'a DashMap<K, V>,
-// ) -> ListEntitiesFuture<'a, V, E> {
-//     let iter = stream::iter(map.iter().map(|r| Ok(r.value().clone()))).boxed();
+pub fn stream<
+    'a,
+    B: Backend + 'a,
+    F: FnOnce(M1) -> I + Send + 'a,
+    I: Iterator<Item = M2::Id> + Send + 'a,
+    M1: Entity + 'a,
+    M2: Entity + Send + 'a,
+    R1: Repository<M1, B> + Send + 'a,
+    R2: Repository<M2, B> + Send + 'a,
+>(
+    repo: R1,
+    foreign: R2,
+    id: M1::Id,
+    f: F,
+) -> ListEntitiesFuture<'a, M2, B::Error> {
+    struct StreamState<I, R2> {
+        foreign: R2,
+        ids: I,
+    }
 
-//     future::ok(iter).boxed()
-// }
+    Box::pin(async move {
+        let fut = repo.get(id);
+
+        let foreign_ids = if let Some(entity) = fut.await? {
+            f(entity)
+        } else {
+            return Ok(stream::empty().boxed());
+        };
+
+        let state = StreamState {
+            foreign,
+            ids: foreign_ids,
+        };
+
+        Ok(stream::unfold(state, |mut state| async move {
+            loop {
+                let id = state.ids.next()?;
+
+                let fut = state.foreign.get(id);
+
+                match fut.await {
+                    Ok(Some(e)) => return Some((Ok(e), state)),
+                    Ok(None) => continue,
+                    Err(why) => return Some((Err(why), state)),
+                }
+            }
+        })
+        .boxed())
+    })
+}
