@@ -10,7 +10,7 @@ pub fn relation_and_then<
     B: Backend + 'a,
     F: FnOnce(M1) -> Option<M2::Id> + Send + 'a,
     M1: Entity + 'a,
-    M2: Entity + Send + 'a,
+    M2: Entity + 'a,
     R1: Repository<M1, B> + Send + 'a,
     R2: Repository<M2, B> + Send + Sync + 'a,
 >(
@@ -40,7 +40,7 @@ pub fn relation_map<
     B: Backend + 'a,
     F: FnOnce(M1) -> M2::Id + Send + 'a,
     M1: Entity + 'a,
-    M2: Entity + Send + 'a,
+    M2: Entity + 'a,
     R1: Repository<M1, B> + Send + 'a,
     R2: Repository<M2, B> + Send + Sync + 'a,
 >(
@@ -71,7 +71,7 @@ pub fn stream<
     F: FnOnce(M1) -> I + Send + 'a,
     I: Iterator<Item = M2::Id> + Send + 'a,
     M1: Entity + 'a,
-    M2: Entity + Send + 'a,
+    M2: Entity + 'a,
     R1: Repository<M1, B> + Send + 'a,
     R2: Repository<M2, B> + Send + 'a,
 >(
