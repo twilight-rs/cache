@@ -6,18 +6,19 @@ use super::{
 use futures_util::stream::{self, StreamExt};
 
 pub fn relation_and_then<
-    B: Backend + 'static,
-    F: FnOnce(M1) -> Option<M2::Id> + Send + 'static,
-    M1: Entity + 'static,
-    M2: Entity + Send + 'static,
-    R1: Repository<M1, B> + Send + 'static,
-    R2: Repository<M2, B> + Send + Sync + 'static,
+    'a,
+    B: Backend + 'a,
+    F: FnOnce(M1) -> Option<M2::Id> + Send + 'a,
+    M1: Entity + 'a,
+    M2: Entity + Send + 'a,
+    R1: Repository<M1, B> + Send + 'a,
+    R2: Repository<M2, B> + Send + Sync + 'a,
 >(
     repo: R1,
     foreign: R2,
     id: M1::Id,
     f: F,
-) -> GetEntityFuture<'static, M2, B::Error>
+) -> GetEntityFuture<'a, M2, B::Error>
 where
     B::Error: Send,
 {
@@ -35,18 +36,19 @@ where
 }
 
 pub fn relation_map<
-    B: Backend + 'static,
-    F: FnOnce(M1) -> M2::Id + Send + 'static,
-    M1: Entity + 'static,
-    M2: Entity + Send + 'static,
-    R1: Repository<M1, B> + Send + 'static,
-    R2: Repository<M2, B> + Send + Sync + 'static,
+    'a,
+    B: Backend + 'a,
+    F: FnOnce(M1) -> M2::Id + Send + 'a,
+    M1: Entity + 'a,
+    M2: Entity + Send + 'a,
+    R1: Repository<M1, B> + Send + 'a,
+    R2: Repository<M2, B> + Send + Sync + 'a,
 >(
     repo: R1,
     foreign: R2,
     id: M1::Id,
     f: F,
-) -> GetEntityFuture<'static, M2, B::Error>
+) -> GetEntityFuture<'a, M2, B::Error>
 where
     B::Error: Send,
 {
