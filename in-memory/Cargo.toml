@@ -10,7 +10,7 @@ bitflags = { default-features = false, version = "1" }
 dashmap = { default-features = false, version = "3" }
 futures-util = { default-features = false, features = ["std"], version = "0.3" }
 rarity-cache = { default-features = false, path = "../base" }
-twilight-model = { branch = "trunk", default-features = false, git = "https://github.com/twilight-rs/twilight" }
+twilight-model = { default-features = false, version = "0.1" }
 tracing = { default-features = false, features = ["std", "attributes"], version = "0.1" }
 
 [dev-dependencies]
