@@ -12,7 +12,7 @@ pub mod voice;
 /// in a relational database.
 ///
 /// [`EmojiEntity`]: emoji/struct.EmojiEntity.html
-pub trait Entity {
+pub trait Entity: Send {
     type Id: Send;
 
     /// Return the ID of the entity.

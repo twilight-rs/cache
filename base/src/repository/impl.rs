@@ -1,22 +1,13 @@
-use super::{backend::Backend, entity::Entity};
-use futures_util::{
-    future::{self, FutureExt, TryFutureExt},
-    stream::Stream,
+use super::{
+    super::{backend::Backend, entity::Entity},
+    GetEntityFuture,
+    ListEntitiesFuture,
+    RemoveEntitiesFuture,
+    RemoveEntityFuture,
+    UpsertEntitiesFuture,
+    UpsertEntityFuture,
 };
-use std::{future::Future, pin::Pin};
-
-pub type GetEntityFuture<'a, T, E> =
-    Pin<Box<dyn Future<Output = Result<Option<T>, E>> + Send + 'a>>;
-pub type ListEntitiesFuture<'a, T, E> =
-    Pin<Box<dyn Future<Output = Result<ListEntitiesStream<'a, T, E>, E>> + Send + 'a>>;
-pub type ListEntitiesStream<'a, T, E> = Pin<Box<dyn Stream<Item = Result<T, E>> + Send + 'a>>;
-pub type ListEntityIdsFuture<'a, T, E> =
-    Pin<Box<dyn Future<Output = Result<ListEntityIdsStream<'a, T, E>, E>> + Send + 'a>>;
-pub type ListEntityIdsStream<'a, T, E> = Pin<Box<dyn Stream<Item = Result<T, E>> + Send + 'a>>;
-pub type RemoveEntityFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>> + Send + 'a>>;
-pub type RemoveEntitiesFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>> + Send + 'a>>;
-pub type UpsertEntityFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>> + Send + 'a>>;
-pub type UpsertEntitiesFuture<'a, E> = Pin<Box<dyn Future<Output = Result<(), E>> + Send + 'a>>;
+use futures_util::future::{self, FutureExt, TryFutureExt};
 
 pub trait Repository<E: Entity, B: Backend> {
     /// Retrieve an immutable reference to the backend that the repository is
