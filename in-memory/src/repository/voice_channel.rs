@@ -169,7 +169,10 @@ impl InMemoryVoiceChannelRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{VoiceChannelEntity, VoiceChannelRepository, Repository, InMemoryVoiceChannelRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryVoiceChannelRepository, Repository, VoiceChannelEntity,
+        VoiceChannelRepository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

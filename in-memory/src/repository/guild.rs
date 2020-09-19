@@ -355,7 +355,9 @@ impl GuildRepository<InMemoryBackend> for InMemoryGuildRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{GuildEntity, GuildRepository, Repository, InMemoryGuildRepository, InMemoryBackend};
+    use super::{
+        GuildEntity, GuildRepository, InMemoryBackend, InMemoryGuildRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

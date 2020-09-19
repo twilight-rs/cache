@@ -368,7 +368,7 @@ impl Backend for InMemoryBackend {
 
 #[cfg(test)]
 mod tests {
-    use super::{InMemoryBackendBuilder, InMemoryBackendError, InMemoryBackend, InMemoryCache};
+    use super::{InMemoryBackend, InMemoryBackendBuilder, InMemoryBackendError, InMemoryCache};
     use rarity_cache::Backend;
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::{error::Error, fmt::Debug};
@@ -377,5 +377,10 @@ mod tests {
     assert_impl_all!(InMemoryBackendError: Clone, Debug, Error, Send, Sync);
     assert_impl_all!(InMemoryBackend: Backend, Clone, Debug, Send, Sync);
     assert_impl_all!(InMemoryCache: Clone, Debug, Send, Sync);
-    assert_obj_safe!(InMemoryBackendBuilder, InMemoryBackendError, InMemoryBackend, InMemoryCache);
+    assert_obj_safe!(
+        InMemoryBackendBuilder,
+        InMemoryBackendError,
+        InMemoryBackend,
+        InMemoryCache
+    );
 }

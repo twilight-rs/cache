@@ -119,7 +119,10 @@ impl InMemoryVoiceStateRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{VoiceStateEntity, VoiceStateRepository, Repository, InMemoryVoiceStateRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryVoiceStateRepository, Repository, VoiceStateEntity,
+        VoiceStateRepository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

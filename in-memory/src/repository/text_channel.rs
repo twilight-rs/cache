@@ -208,7 +208,10 @@ impl InMemoryTextChannelRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{TextChannelEntity, TextChannelRepository, Repository, InMemoryTextChannelRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryTextChannelRepository, Repository, TextChannelEntity,
+        TextChannelRepository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

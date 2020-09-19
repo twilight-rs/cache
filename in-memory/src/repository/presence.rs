@@ -82,7 +82,9 @@ impl PresenceRepository<InMemoryBackend> for InMemoryPresenceRepository {}
 
 #[cfg(test)]
 mod tests {
-    use super::{PresenceEntity, PresenceRepository, Repository, InMemoryPresenceRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryPresenceRepository, PresenceEntity, PresenceRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

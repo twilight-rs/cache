@@ -135,7 +135,10 @@ impl InMemoryCategoryChannelRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{CategoryChannelEntity, CategoryChannelRepository, Repository, InMemoryCategoryChannelRepository, InMemoryBackend};
+    use super::{
+        CategoryChannelEntity, CategoryChannelRepository, InMemoryBackend,
+        InMemoryCategoryChannelRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

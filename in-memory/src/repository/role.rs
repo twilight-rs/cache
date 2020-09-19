@@ -77,7 +77,7 @@ impl InMemoryRoleRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{RoleEntity, RoleRepository, Repository, InMemoryRoleRepository, InMemoryBackend};
+    use super::{InMemoryBackend, InMemoryRoleRepository, Repository, RoleEntity, RoleRepository};
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

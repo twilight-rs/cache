@@ -140,7 +140,9 @@ impl InMemoryMemberRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{MemberEntity, MemberRepository, Repository, InMemoryMemberRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryMemberRepository, MemberEntity, MemberRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

@@ -138,7 +138,10 @@ impl InMemoryPrivateChannelRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{PrivateChannelEntity, PrivateChannelRepository, Repository, InMemoryPrivateChannelRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryPrivateChannelRepository, PrivateChannelEntity,
+        PrivateChannelRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

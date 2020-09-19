@@ -128,7 +128,10 @@ impl InMemoryAttachmentRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{AttachmentEntity, AttachmentRepository, Repository, InMemoryAttachmentRepository, InMemoryBackend};
+    use super::{
+        AttachmentEntity, AttachmentRepository, InMemoryAttachmentRepository, InMemoryBackend,
+        Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

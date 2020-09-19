@@ -371,7 +371,9 @@ impl InMemoryMessageRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{MessageEntity, MessageRepository, Repository, InMemoryMessageRepository, InMemoryBackend};
+    use super::{
+        InMemoryBackend, InMemoryMessageRepository, MessageEntity, MessageRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 

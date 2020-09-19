@@ -151,7 +151,9 @@ impl InMemoryEmojiRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{EmojiEntity, EmojiRepository, Repository, InMemoryEmojiRepository, InMemoryBackend};
+    use super::{
+        EmojiEntity, EmojiRepository, InMemoryBackend, InMemoryEmojiRepository, Repository,
+    };
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::fmt::Debug;
 
