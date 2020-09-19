@@ -132,3 +132,21 @@ impl InMemoryCategoryChannelRepository {
         CategoryChannelRepository::guild(self, channel_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{CategoryChannelEntity, CategoryChannelRepository, Repository, InMemoryCategoryChannelRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryCategoryChannelRepository:
+        CategoryChannelRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<CategoryChannelEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryCategoryChannelRepository);
+}

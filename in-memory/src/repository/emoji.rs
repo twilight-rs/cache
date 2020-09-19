@@ -148,3 +148,21 @@ impl InMemoryEmojiRepository {
         EmojiRepository::user(self, emoji_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{EmojiEntity, EmojiRepository, Repository, InMemoryEmojiRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryEmojiRepository:
+        EmojiRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<EmojiEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryEmojiRepository);
+}

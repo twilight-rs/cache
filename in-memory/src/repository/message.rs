@@ -368,3 +368,21 @@ impl InMemoryMessageRepository {
         MessageRepository::mentions(self, message_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{MessageEntity, MessageRepository, Repository, InMemoryMessageRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryMessageRepository:
+        MessageRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<MessageEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryMessageRepository);
+}

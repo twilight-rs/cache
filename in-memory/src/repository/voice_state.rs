@@ -116,3 +116,21 @@ impl InMemoryVoiceStateRepository {
         VoiceStateRepository::channel(self, guild_id, user_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{VoiceStateEntity, VoiceStateRepository, Repository, InMemoryVoiceStateRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryVoiceStateRepository:
+        VoiceStateRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<VoiceStateEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryVoiceStateRepository);
+}

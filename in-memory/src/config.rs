@@ -76,6 +76,12 @@ impl Default for Config {
 #[cfg(test)]
 mod tests {
     use super::{Config, EntityType};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(Config: Clone, Debug, Send, Sync);
+    assert_impl_all!(EntityType: Clone, Copy, Debug, Eq, PartialEq, Send, Sync);
+    assert_obj_safe!(Config, EntityType);
 
     #[test]
     fn test_event_type_const_values() {

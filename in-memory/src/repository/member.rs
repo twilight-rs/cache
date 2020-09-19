@@ -137,3 +137,21 @@ impl InMemoryMemberRepository {
         MemberRepository::roles(self, guild_id, user_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{MemberEntity, MemberRepository, Repository, InMemoryMemberRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryMemberRepository:
+        MemberRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<MemberEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryMemberRepository);
+}

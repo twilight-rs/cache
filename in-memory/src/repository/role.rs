@@ -74,3 +74,21 @@ impl InMemoryRoleRepository {
         RoleRepository::guild(self, role_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{RoleEntity, RoleRepository, Repository, InMemoryRoleRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryRoleRepository:
+        RoleRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<RoleEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryRoleRepository);
+}

@@ -166,3 +166,21 @@ impl InMemoryVoiceChannelRepository {
         VoiceChannelRepository::parent(self, channel_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{VoiceChannelEntity, VoiceChannelRepository, Repository, InMemoryVoiceChannelRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryVoiceChannelRepository:
+        VoiceChannelRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<VoiceChannelEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryVoiceChannelRepository);
+}

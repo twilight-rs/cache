@@ -205,3 +205,21 @@ impl InMemoryTextChannelRepository {
         TextChannelRepository::parent(self, channel_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{TextChannelEntity, TextChannelRepository, Repository, InMemoryTextChannelRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryTextChannelRepository:
+        TextChannelRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<TextChannelEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryTextChannelRepository);
+}

@@ -135,3 +135,21 @@ impl InMemoryPrivateChannelRepository {
         PrivateChannelRepository::recipient(self, channel_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{PrivateChannelEntity, PrivateChannelRepository, Repository, InMemoryPrivateChannelRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryPrivateChannelRepository:
+        PrivateChannelRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<PrivateChannelEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryPrivateChannelRepository);
+}

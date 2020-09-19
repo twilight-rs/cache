@@ -139,3 +139,21 @@ impl InMemoryGroupRepository {
         GroupRepository::recipients(self, group_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{GroupEntity, GroupRepository, Repository, InMemoryGroupRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryGroupRepository:
+        GroupRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<GroupEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryGroupRepository);
+}

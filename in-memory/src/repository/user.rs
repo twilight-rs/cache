@@ -96,3 +96,21 @@ impl InMemoryUserRepository {
         UserRepository::guilds(self, user_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{UserEntity, UserRepository, Repository, InMemoryUserRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryUserRepository:
+        UserRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<UserEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryUserRepository);
+}

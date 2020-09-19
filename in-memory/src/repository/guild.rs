@@ -352,3 +352,21 @@ impl GuildRepository<InMemoryBackend> for InMemoryGuildRepository {
         future::ok(None).boxed()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{GuildEntity, GuildRepository, Repository, InMemoryGuildRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryGuildRepository:
+        GuildRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<GuildEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryGuildRepository);
+}

@@ -125,3 +125,21 @@ impl InMemoryAttachmentRepository {
         AttachmentRepository::message(self, attachment_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{AttachmentEntity, AttachmentRepository, Repository, InMemoryAttachmentRepository, InMemoryBackend};
+    use static_assertions::{assert_impl_all, assert_obj_safe};
+    use std::fmt::Debug;
+
+    assert_impl_all!(
+        InMemoryAttachmentRepository:
+        AttachmentRepository<InMemoryBackend>,
+        Clone,
+        Debug,
+        Repository<AttachmentEntity, InMemoryBackend>,
+        Send,
+        Sync,
+    );
+    assert_obj_safe!(InMemoryAttachmentRepository);
+}
