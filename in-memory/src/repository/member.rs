@@ -78,7 +78,7 @@ impl MemberRepository<InMemoryBackend> for InMemoryMemberRepository {
              .0
             .members
             .get(&(guild_id, user_id))
-            .and_then(|member| member.hoisted_role)
+            .and_then(|member| member.hoisted_role_id)
             .and_then(|id| (self.0).0.roles.get(&id))
             .map(|r| r.value().clone());
 

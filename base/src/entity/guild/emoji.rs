@@ -1,7 +1,7 @@
 use super::{super::user::UserEntity, GuildEntity, RoleEntity};
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::id::{EmojiId, GuildId, RoleId, UserId};
 
@@ -32,11 +32,25 @@ impl Entity for EmojiEntity {
 
 pub trait EmojiRepository<B: Backend>: Repository<EmojiEntity, B> {
     /// Retrieve the guild associated with an emoji.
-    fn guild(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
+    fn guild(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
+        utils::relation_map(
+            self.backend().emojis(),
+            self.backend().guilds(),
+            emoji_id,
+            |emoji| emoji.guild_id,
+        )
+    }
 
     /// Retrieve a stream of roles associated with an emoji.
     fn roles(&self, emoji_id: EmojiId) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
 
     /// Retrieve the user associated with an emoji.
-    fn user(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, UserEntity, B::Error>;
+    fn user(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, UserEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().emojis(),
+            self.backend().users(),
+            emoji_id,
+            |emoji| emoji.user_id,
+        )
+    }
 }

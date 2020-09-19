@@ -1,7 +1,7 @@
 use super::message::MessageEntity;
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::id::{AttachmentId, MessageId};
 
@@ -27,6 +27,13 @@ impl Entity for AttachmentEntity {
     }
 }
 
-pub trait AttachmentRepository<B: Backend>: Repository<AttachmentEntity, B> {
-    fn message(&self, attachment_id: AttachmentId) -> GetEntityFuture<'_, MessageEntity, B::Error>;
+pub trait AttachmentRepository<B: Backend>: Repository<AttachmentEntity, B> + Send {
+    fn message(&self, attachment_id: AttachmentId) -> GetEntityFuture<'_, MessageEntity, B::Error> {
+        utils::relation_map(
+            self.backend().attachments(),
+            self.backend().messages(),
+            attachment_id,
+            |attachment| attachment.message_id,
+        )
+    }
 }

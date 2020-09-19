@@ -13,7 +13,7 @@ pub mod voice;
 ///
 /// [`EmojiEntity`]: emoji/struct.EmojiEntity.html
 pub trait Entity {
-    type Id;
+    type Id: Send;
 
     /// Return the ID of the entity.
     ///

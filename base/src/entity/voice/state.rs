@@ -1,7 +1,7 @@
 use super::super::channel::VoiceChannelEntity;
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::id::{ChannelId, GuildId, UserId};
 
@@ -40,5 +40,12 @@ pub trait VoiceStateRepository<B: Backend>: Repository<VoiceStateEntity, B> {
         &self,
         guild_id: GuildId,
         user_id: UserId,
-    ) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error>;
+    ) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().voice_states(),
+            self.backend().voice_channels(),
+            (guild_id, user_id),
+            |state| state.channel_id,
+        )
+    }
 }

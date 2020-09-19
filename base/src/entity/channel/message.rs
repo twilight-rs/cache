@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     channel::{
@@ -51,17 +51,31 @@ impl Entity for MessageEntity {
     }
 }
 
-pub trait MessageRepository<B: Backend>: Repository<MessageEntity, B> {
+pub trait MessageRepository<B: Backend>: Repository<MessageEntity, B> + Send {
     fn attachments(
         &self,
         message_id: MessageId,
     ) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error>;
 
-    fn author(&self, message_id: MessageId) -> GetEntityFuture<'_, UserEntity, B::Error>;
+    fn author(&self, message_id: MessageId) -> GetEntityFuture<'_, UserEntity, B::Error> {
+        utils::relation_map(
+            self.backend().messages(),
+            self.backend().users(),
+            message_id,
+            |message| message.author_id,
+        )
+    }
 
     fn channel(&self, message_id: MessageId) -> GetEntityFuture<'_, ChannelEntity, B::Error>;
 
-    fn guild(&self, message_id: MessageId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
+    fn guild(&self, message_id: MessageId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().messages(),
+            self.backend().guilds(),
+            message_id,
+            |message| message.guild_id,
+        )
+    }
 
     fn mention_channels(
         &self,

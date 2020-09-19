@@ -9,22 +9,22 @@ use super::entity::{
     voice::VoiceStateRepository,
 };
 
-pub trait Backend: Sized {
-    type Error: 'static;
-    type AttachmentRepository: AttachmentRepository<Self>;
-    type CategoryChannelRepository: CategoryChannelRepository<Self>;
-    type EmojiRepository: EmojiRepository<Self>;
-    type GroupRepository: GroupRepository<Self>;
-    type GuildRepository: GuildRepository<Self>;
-    type MemberRepository: MemberRepository<Self>;
-    type MessageRepository: MessageRepository<Self>;
-    type PresenceRepository: PresenceRepository<Self>;
-    type PrivateChannelRepository: PrivateChannelRepository<Self>;
-    type RoleRepository: RoleRepository<Self>;
-    type TextChannelRepository: TextChannelRepository<Self>;
-    type UserRepository: UserRepository<Self>;
-    type VoiceChannelRepository: VoiceChannelRepository<Self>;
-    type VoiceStateRepository: VoiceStateRepository<Self>;
+pub trait Backend: Sized + 'static {
+    type Error: Send + 'static;
+    type AttachmentRepository: AttachmentRepository<Self> + Send + Sync;
+    type CategoryChannelRepository: CategoryChannelRepository<Self> + Send + Sync;
+    type EmojiRepository: EmojiRepository<Self> + Send + Sync;
+    type GroupRepository: GroupRepository<Self> + Send + Sync;
+    type GuildRepository: GuildRepository<Self> + Send + Sync;
+    type MemberRepository: MemberRepository<Self> + Send + Sync;
+    type MessageRepository: MessageRepository<Self> + Send + Sync;
+    type PresenceRepository: PresenceRepository<Self> + Send + Sync;
+    type PrivateChannelRepository: PrivateChannelRepository<Self> + Send + Sync;
+    type RoleRepository: RoleRepository<Self> + Send + Sync;
+    type TextChannelRepository: TextChannelRepository<Self> + Send + Sync;
+    type UserRepository: UserRepository<Self> + Send + Sync;
+    type VoiceChannelRepository: VoiceChannelRepository<Self> + Send + Sync;
+    type VoiceStateRepository: VoiceStateRepository<Self> + Send + Sync;
 
     /// Return a new instance of the backend's attachment repository
     /// implementation.

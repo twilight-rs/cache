@@ -1,7 +1,7 @@
 use super::super::guild::GuildEntity;
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     channel::{permission_overwrite::PermissionOverwrite, CategoryChannel, ChannelType},
@@ -45,5 +45,12 @@ impl Entity for CategoryChannelEntity {
 /// entities.
 pub trait CategoryChannelRepository<B: Backend>: Repository<CategoryChannelEntity, B> {
     /// Retrieve the guild associated with a guild category channel.
-    fn guild(&self, channel_id: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
+    fn guild(&self, channel_id: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().category_channels(),
+            self.backend().guilds(),
+            channel_id,
+            |channel| channel.guild_id,
+        )
+    }
 }

@@ -1,7 +1,7 @@
 use super::{super::guild::GuildEntity, CategoryChannelEntity};
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     channel::{permission_overwrite::PermissionOverwrite, ChannelType, VoiceChannel},
@@ -50,9 +50,25 @@ impl Entity for VoiceChannelEntity {
 /// Repository to work with guild voice channels and their associated entities.
 pub trait VoiceChannelRepository<B: Backend>: Repository<VoiceChannelEntity, B> {
     /// Retrieve the guild associated with a guild voice channel.
-    fn guild(&self, channel_id: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
+    fn guild(&self, channel_id: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().voice_channels(),
+            self.backend().guilds(),
+            channel_id,
+            |channel| channel.guild_id,
+        )
+    }
 
     /// Retrieve the parent category channel of the voice channel.
-    fn parent(&self, channel_id: ChannelId)
-        -> GetEntityFuture<'_, CategoryChannelEntity, B::Error>;
+    fn parent(
+        &self,
+        channel_id: ChannelId,
+    ) -> GetEntityFuture<'_, CategoryChannelEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().voice_channels(),
+            self.backend().category_channels(),
+            channel_id,
+            |channel| channel.parent_id,
+        )
+    }
 }

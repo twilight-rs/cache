@@ -117,5 +117,6 @@ pub mod repository;
 
 mod backend;
 mod cache;
+mod utils;
 
 pub use self::{backend::Backend, cache::Cache, entity::Entity, repository::Repository};

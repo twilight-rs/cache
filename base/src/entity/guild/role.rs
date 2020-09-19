@@ -1,7 +1,7 @@
 use super::GuildEntity;
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     guild::Permissions,
@@ -33,5 +33,12 @@ impl Entity for RoleEntity {
 
 pub trait RoleRepository<B: Backend>: Repository<RoleEntity, B> {
     /// Retrieve the guild associated with a role.
-    fn guild(&self, role_id: RoleId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
+    fn guild(&self, role_id: RoleId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
+        utils::relation_map(
+            self.backend().roles(),
+            self.backend().guilds(),
+            role_id,
+            |role| role.guild_id,
+        )
+    }
 }

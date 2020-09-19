@@ -1,7 +1,7 @@
 use super::{super::guild::GuildEntity, CategoryChannelEntity, MessageEntity};
 use crate::{
     repository::{GetEntityFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     channel::{permission_overwrite::PermissionOverwrite, ChannelType, TextChannel},
@@ -56,12 +56,35 @@ impl Entity for TextChannelEntity {
 /// Repository to work with guild text channels and their associated entities.
 pub trait TextChannelRepository<B: Backend>: Repository<TextChannelEntity, B> {
     /// Retrieve the guild associated with a guild text channel.
-    fn guild(&self, channel_id: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error>;
+    fn guild(&self, channel_id: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().text_channels(),
+            self.backend().guilds(),
+            channel_id,
+            |channel| channel.guild_id,
+        )
+    }
 
     /// Retrieve the last message of a text channel.
-    fn last_message(&self, group_id: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error>;
+    fn last_message(&self, channel_id: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().text_channels(),
+            self.backend().messages(),
+            channel_id,
+            |channel| channel.last_message_id,
+        )
+    }
 
     /// Retrieve the parent category channel of the voice channel.
-    fn parent(&self, channel_id: ChannelId)
-        -> GetEntityFuture<'_, CategoryChannelEntity, B::Error>;
+    fn parent(
+        &self,
+        channel_id: ChannelId,
+    ) -> GetEntityFuture<'_, CategoryChannelEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().text_channels(),
+            self.backend().category_channels(),
+            channel_id,
+            |channel| channel.parent_id,
+        )
+    }
 }

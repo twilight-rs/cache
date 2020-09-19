@@ -1,7 +1,7 @@
 use super::role::RoleEntity;
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     guild::Member,
@@ -13,7 +13,7 @@ use twilight_model::{
 pub struct MemberEntity {
     pub deaf: bool,
     pub guild_id: GuildId,
-    pub hoisted_role: Option<RoleId>,
+    pub hoisted_role_id: Option<RoleId>,
     pub joined_at: Option<String>,
     pub mute: bool,
     pub nick: Option<String>,
@@ -27,7 +27,7 @@ impl From<Member> for MemberEntity {
         Self {
             deaf: member.deaf,
             guild_id: member.guild_id,
-            hoisted_role: member.hoisted_role,
+            hoisted_role_id: member.hoisted_role,
             joined_at: member.joined_at,
             mute: member.mute,
             nick: member.nick,
@@ -53,7 +53,14 @@ pub trait MemberRepository<B: Backend>: Repository<MemberEntity, B> {
         &self,
         guild_id: GuildId,
         user_id: UserId,
-    ) -> GetEntityFuture<'_, RoleEntity, B::Error>;
+    ) -> GetEntityFuture<'_, RoleEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().members(),
+            self.backend().roles(),
+            (guild_id, user_id),
+            |member| member.hoisted_role_id,
+        )
+    }
 
     /// Retrieve a stream of roles associated with a member.
     ///
