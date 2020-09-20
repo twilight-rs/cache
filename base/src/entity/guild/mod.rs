@@ -18,8 +18,7 @@ use super::{
 };
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, ListEntityIdsFuture, Repository},
-    utils,
-    Backend, Entity,
+    utils, Backend, Entity,
 };
 use twilight_model::{
     guild::{
