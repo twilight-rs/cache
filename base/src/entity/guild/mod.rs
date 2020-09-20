@@ -114,7 +114,9 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     fn emoji_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, EmojiId, B::Error>;
 
     /// Retrieve a stream of emojis within a guild.
-    fn emojis(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, EmojiEntity, B::Error>;
+    fn emojis(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, EmojiEntity, B::Error> {
+        utils::stream_ids(self.emoji_ids(guild_id), self.backend().emojis())
+    }
 
     /// Retrieve a stream of member IDs within a guild.
     fn member_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, B::Error>;
@@ -145,7 +147,9 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     fn role_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, RoleId, B::Error>;
 
     /// Retrieve a stream of roles within a guild.
-    fn roles(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, RoleEntity, B::Error>;
+    fn roles(&self, guild_id: GuildId) -> ListEntitiesFuture<'_, RoleEntity, B::Error> {
+        utils::stream_ids(self.role_ids(guild_id), self.backend().roles())
+    }
 
     /// Retrieve the rules channel associated with a guild.
     ///
