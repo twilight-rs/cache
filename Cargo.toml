@@ -1,2 +1,2 @@
 [workspace]
-members = ["base", "in-memory", "redis"]
+members = ["base", "in-memory", "redis", "unqlite"]
