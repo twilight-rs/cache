@@ -119,7 +119,14 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     ///
     /// Backend implementations should return `None` if the user is not in the
     /// cache.
-    fn owner(&self, guild_id: GuildId) -> GetEntityFuture<'_, UserEntity, B::Error>;
+    fn owner(&self, guild_id: GuildId) -> GetEntityFuture<'_, UserEntity, B::Error> {
+        utils::relation_map(
+            self.backend().guilds(),
+            self.backend().users(),
+            guild_id,
+            |guild| guild.owner_id,
+        )
+    }
 
     /// Retrieve a stream of user IDs of presences within a guild.
     fn presence_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, B::Error>;
