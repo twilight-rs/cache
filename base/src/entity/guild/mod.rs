@@ -18,6 +18,7 @@ use super::{
 };
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, ListEntityIdsFuture, Repository},
+    utils,
     Backend, Entity,
 };
 use twilight_model::{
@@ -140,7 +141,14 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     /// not present in the cache.
     ///
     /// [`GuildEntity::rules_channel_id`]: struct.GuildEntity.html#structfield.rules_channel_id
-    fn rules_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, TextChannelEntity, B::Error>;
+    fn rules_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, TextChannelEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().guilds(),
+            self.backend().text_channels(),
+            guild_id,
+            |guild| guild.rules_channel_id,
+        )
+    }
 
     /// Retrieve the system channel associated with a guild.
     ///
