@@ -156,8 +156,17 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     /// not present in the cache.
     ///
     /// [`GuildEntity::system_channel_id`]: struct.GuildEntity.html#structfield.system_channel_id
-    fn system_channel(&self, guild_id: GuildId)
-        -> GetEntityFuture<'_, TextChannelEntity, B::Error>;
+    fn system_channel(
+        &self,
+        guild_id: GuildId,
+    ) -> GetEntityFuture<'_, TextChannelEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().guilds(),
+            self.backend().text_channels(),
+            guild_id,
+            |guild| guild.system_channel_id,
+        )
+    }
 
     /// Retrieve a stream of voice states' user IDs within a guild.
     fn voice_state_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, UserId, B::Error>;
