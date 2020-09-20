@@ -3,7 +3,7 @@
 use crate::{
     entity::{guild::GuildEntity, Entity},
     repository::{ListEntitiesFuture, ListEntityIdsFuture, Repository},
-    Backend,
+    utils, Backend,
 };
 use twilight_model::{
     id::{GuildId, UserId},
@@ -42,5 +42,7 @@ pub trait UserRepository<B: Backend>: Repository<UserEntity, B> {
     fn guild_ids(&self, user_id: UserId) -> ListEntityIdsFuture<'_, GuildId, B::Error>;
 
     /// Retrieve a stream of guilds associated with a user.
-    fn guilds(&self, user_id: UserId) -> ListEntitiesFuture<'_, GuildEntity, B::Error>;
+    fn guilds(&self, user_id: UserId) -> ListEntitiesFuture<'_, GuildEntity, B::Error> {
+        utils::stream_ids(self.guild_ids(user_id), self.backend().guilds())
+    }
 }
