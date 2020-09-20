@@ -8,7 +8,7 @@ use futures_util::future::{self, FutureExt, TryFutureExt};
 pub trait Repository<E: Entity, B: Backend> {
     /// Retrieve an immutable reference to the backend that the repository is
     /// tied to.
-    fn backend(&self) -> &B;
+    fn backend(&self) -> B;
 
     /// Get an entity by its ID in the cache.
     fn get(&self, entity_id: E::Id) -> GetEntityFuture<'_, E, B::Error>;

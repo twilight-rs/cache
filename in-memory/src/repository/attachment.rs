@@ -19,8 +19,8 @@ use twilight_model::id::AttachmentId;
 pub struct InMemoryAttachmentRepository(pub(crate) InMemoryBackend);
 
 impl Repository<AttachmentEntity, InMemoryBackend> for InMemoryAttachmentRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(

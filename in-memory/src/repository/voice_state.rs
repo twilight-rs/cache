@@ -21,8 +21,8 @@ use twilight_model::id::{GuildId, UserId};
 pub struct InMemoryVoiceStateRepository(pub(crate) InMemoryBackend);
 
 impl Repository<VoiceStateEntity, InMemoryBackend> for InMemoryVoiceStateRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(

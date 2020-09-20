@@ -20,8 +20,8 @@ use twilight_model::id::EmojiId;
 pub struct InMemoryEmojiRepository(pub(crate) InMemoryBackend);
 
 impl Repository<EmojiEntity, InMemoryBackend> for InMemoryEmojiRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(&self, emoji_id: EmojiId) -> GetEntityFuture<'_, EmojiEntity, InMemoryBackendError> {

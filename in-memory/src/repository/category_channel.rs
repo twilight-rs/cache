@@ -20,8 +20,8 @@ use twilight_model::id::ChannelId;
 pub struct InMemoryCategoryChannelRepository(pub(crate) InMemoryBackend);
 
 impl Repository<CategoryChannelEntity, InMemoryBackend> for InMemoryCategoryChannelRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(

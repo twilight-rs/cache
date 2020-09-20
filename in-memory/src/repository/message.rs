@@ -60,8 +60,8 @@ impl InMemoryMessageRepository {
 }
 
 impl Repository<MessageEntity, InMemoryBackend> for InMemoryMessageRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(

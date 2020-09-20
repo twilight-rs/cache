@@ -21,8 +21,8 @@ use twilight_model::id::ChannelId;
 pub struct InMemoryVoiceChannelRepository(pub(crate) InMemoryBackend);
 
 impl Repository<VoiceChannelEntity, InMemoryBackend> for InMemoryVoiceChannelRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(

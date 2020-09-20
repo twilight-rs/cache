@@ -19,8 +19,8 @@ use twilight_model::id::RoleId;
 pub struct InMemoryRoleRepository(pub(crate) InMemoryBackend);
 
 impl Repository<RoleEntity, InMemoryBackend> for InMemoryRoleRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(&self, role_id: RoleId) -> GetEntityFuture<'_, RoleEntity, InMemoryBackendError> {

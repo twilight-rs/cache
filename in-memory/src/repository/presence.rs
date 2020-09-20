@@ -19,8 +19,8 @@ use twilight_model::id::{GuildId, UserId};
 pub struct InMemoryPresenceRepository(pub(crate) InMemoryBackend);
 
 impl Repository<PresenceEntity, InMemoryBackend> for InMemoryPresenceRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(

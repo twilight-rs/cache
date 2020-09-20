@@ -20,8 +20,8 @@ use twilight_model::id::ChannelId;
 pub struct InMemoryGroupRepository(pub(crate) InMemoryBackend);
 
 impl Repository<GroupEntity, InMemoryBackend> for InMemoryGroupRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(&self, group_id: ChannelId) -> GetEntityFuture<'_, GroupEntity, InMemoryBackendError> {

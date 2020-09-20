@@ -50,17 +50,17 @@ use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, R
 #[derive(Clone, Debug)]
 pub struct NoopRepository<B>(B);
 
-impl<B: Backend> NoopRepository<B> {
+impl<B: Backend + Clone> NoopRepository<B> {
     /// Create a new noop repository with the backend.
     pub fn new(backend: B) -> Self {
         Self(backend)
     }
 }
 
-impl<B: Backend, E: Entity + 'static> Repository<E, B> for NoopRepository<B> {
+impl<B: Backend + Clone, E: Entity + 'static> Repository<E, B> for NoopRepository<B> {
     /// Returns an immutable reference to the backend.
-    fn backend(&self) -> &B {
-        &self.0
+    fn backend(&self) -> B {
+        self.0.clone()
     }
 
     /// Always returns no entity.
@@ -97,19 +97,19 @@ impl<B: Backend, E: Entity + 'static> Repository<E, B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> AttachmentRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> AttachmentRepository<B> for NoopRepository<B> {
     fn message(&self, _: AttachmentId) -> GetEntityFuture<'_, MessageEntity, B::Error> {
         future::ok(None).boxed()
     }
 }
 
-impl<B: Backend + Send> CategoryChannelRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> CategoryChannelRepository<B> for NoopRepository<B> {
     fn guild(&self, _: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
         future::ok(None).boxed()
     }
 }
 
-impl<B: Backend + Send> EmojiRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> EmojiRepository<B> for NoopRepository<B> {
     fn guild(&self, _: EmojiId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -123,7 +123,7 @@ impl<B: Backend + Send> EmojiRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> GroupRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> GroupRepository<B> for NoopRepository<B> {
     fn last_message(&self, _: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -137,7 +137,7 @@ impl<B: Backend + Send> GroupRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> GuildRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> GuildRepository<B> for NoopRepository<B> {
     fn afk_channel(&self, _: GuildId) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -213,7 +213,7 @@ impl<B: Backend + Send> GuildRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> MemberRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> MemberRepository<B> for NoopRepository<B> {
     fn hoisted_role(&self, _: GuildId, _: UserId) -> GetEntityFuture<'_, RoleEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -223,7 +223,7 @@ impl<B: Backend + Send> MemberRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> MessageRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> MessageRepository<B> for NoopRepository<B> {
     fn attachments(&self, _: MessageId) -> ListEntitiesFuture<'_, AttachmentEntity, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
@@ -268,9 +268,9 @@ impl<B: Backend + Send> MessageRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> PresenceRepository<B> for NoopRepository<B> {}
+impl<B: Backend + Clone + Send> PresenceRepository<B> for NoopRepository<B> {}
 
-impl<B: Backend + Send> PrivateChannelRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> PrivateChannelRepository<B> for NoopRepository<B> {
     fn last_message(&self, _: ChannelId) -> GetEntityFuture<'_, MessageEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -280,13 +280,13 @@ impl<B: Backend + Send> PrivateChannelRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> RoleRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> RoleRepository<B> for NoopRepository<B> {
     fn guild(&self, _: RoleId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
         future::ok(None).boxed()
     }
 }
 
-impl<B: Backend + Send> TextChannelRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> TextChannelRepository<B> for NoopRepository<B> {
     fn guild(&self, _: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -300,7 +300,7 @@ impl<B: Backend + Send> TextChannelRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> UserRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> UserRepository<B> for NoopRepository<B> {
     fn guild_ids(&self, _: UserId) -> super::ListEntityIdsFuture<'_, GuildId, B::Error> {
         future::ok(stream::empty().boxed()).boxed()
     }
@@ -310,7 +310,7 @@ impl<B: Backend + Send> UserRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> VoiceChannelRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> VoiceChannelRepository<B> for NoopRepository<B> {
     fn guild(&self, _: ChannelId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
         future::ok(None).boxed()
     }
@@ -320,7 +320,7 @@ impl<B: Backend + Send> VoiceChannelRepository<B> for NoopRepository<B> {
     }
 }
 
-impl<B: Backend + Send> VoiceStateRepository<B> for NoopRepository<B> {
+impl<B: Backend + Clone + Send> VoiceStateRepository<B> for NoopRepository<B> {
     fn channel(&self, _: GuildId, _: UserId) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error> {
         future::ok(None).boxed()
     }

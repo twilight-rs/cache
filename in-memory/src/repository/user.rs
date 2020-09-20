@@ -21,8 +21,8 @@ use twilight_model::id::{GuildId, UserId};
 pub struct InMemoryUserRepository(pub(crate) InMemoryBackend);
 
 impl Repository<UserEntity, InMemoryBackend> for InMemoryUserRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(&self, user_id: UserId) -> GetEntityFuture<'_, UserEntity, InMemoryBackendError> {

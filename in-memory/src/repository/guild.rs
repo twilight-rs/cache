@@ -24,8 +24,8 @@ use twilight_model::id::{ChannelId, EmojiId, GuildId, RoleId, UserId};
 pub struct InMemoryGuildRepository(pub(crate) InMemoryBackend);
 
 impl Repository<GuildEntity, InMemoryBackend> for InMemoryGuildRepository {
-    fn backend(&self) -> &InMemoryBackend {
-        &self.0
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
     }
 
     fn get(&self, guild_id: GuildId) -> GetEntityFuture<'_, GuildEntity, InMemoryBackendError> {
