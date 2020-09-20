@@ -95,7 +95,14 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     /// present in the cache.
     ///
     /// [`GuildEntity::afk_channel_id`]: struct.GuildEntity.html#structfield.afk_channel_id
-    fn afk_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error>;
+    fn afk_channel(&self, guild_id: GuildId) -> GetEntityFuture<'_, VoiceChannelEntity, B::Error> {
+        utils::relation_and_then(
+            self.backend().guilds(),
+            self.backend().voice_channels(),
+            guild_id,
+            |guild| guild.afk_channel_id,
+        )
+    }
 
     /// Retrieve a stream of channel IDs within a guild.
     fn channel_ids(&self, guild_id: GuildId) -> ListEntityIdsFuture<'_, ChannelId, B::Error>;
