@@ -203,5 +203,40 @@ pub trait GuildRepository<B: Backend>: Repository<GuildEntity, B> {
     fn widget_channel(
         &self,
         guild_id: GuildId,
-    ) -> GetEntityFuture<'_, GuildChannelEntity, B::Error>;
+    ) -> GetEntityFuture<'_, GuildChannelEntity, B::Error> {
+        let backend = self.backend();
+
+        Box::pin(async move {
+            let guilds = backend.guilds();
+
+            let channel_id = match guilds
+                .get(guild_id)
+                .await?
+                .and_then(|g| g.widget_channel_id)
+            {
+                Some(channel_id) => channel_id,
+                None => return Ok(None),
+            };
+
+            let text_channels = backend.text_channels();
+
+            if let Some(channel) = text_channels.get(channel_id).await? {
+                return Ok(Some(GuildChannelEntity::Text(channel)));
+            }
+
+            let voice_channels = backend.voice_channels();
+
+            if let Some(channel) = voice_channels.get(channel_id).await? {
+                return Ok(Some(GuildChannelEntity::Voice(channel)));
+            }
+
+            let category_channels = backend.category_channels();
+
+            if let Some(channel) = category_channels.get(channel_id).await? {
+                return Ok(Some(GuildChannelEntity::Category(channel)));
+            }
+
+            Ok(None)
+        })
+    }
 }
