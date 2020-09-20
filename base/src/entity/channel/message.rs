@@ -3,7 +3,7 @@ use super::{
         guild::{GuildEntity, RoleEntity},
         user::UserEntity,
     },
-    AttachmentEntity, ChannelEntity, TextChannelEntity,
+    AttachmentEntity, ChannelEntity, GuildChannelEntity, TextChannelEntity,
 };
 use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
@@ -73,7 +73,41 @@ pub trait MessageRepository<B: Backend>: Repository<MessageEntity, B> + Send {
         )
     }
 
-    fn channel(&self, message_id: MessageId) -> GetEntityFuture<'_, ChannelEntity, B::Error>;
+    fn channel(&self, message_id: MessageId) -> GetEntityFuture<'_, ChannelEntity, B::Error> {
+        let backend = self.backend();
+
+        Box::pin(async move {
+            let messages = backend.messages();
+
+            let channel_id = if let Some(msg) = messages.get(message_id).await? {
+                msg.channel_id
+            } else {
+                return Ok(None);
+            };
+
+            let text_channels = backend.text_channels();
+
+            if let Some(channel) = text_channels.get(channel_id).await? {
+                return Ok(Some(ChannelEntity::Guild(GuildChannelEntity::Text(
+                    channel,
+                ))));
+            }
+
+            let private_channels = backend.private_channels();
+
+            if let Some(channel) = private_channels.get(channel_id).await? {
+                return Ok(Some(ChannelEntity::Private(channel)));
+            }
+
+            let groups = backend.groups();
+
+            if let Some(channel) = groups.get(channel_id).await? {
+                return Ok(Some(ChannelEntity::Group(channel)));
+            }
+
+            Ok(None)
+        })
+    }
 
     fn guild(&self, message_id: MessageId) -> GetEntityFuture<'_, GuildEntity, B::Error> {
         utils::relation_and_then(
