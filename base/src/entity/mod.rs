@@ -4,6 +4,8 @@ pub mod guild;
 pub mod user;
 pub mod voice;
 
+use std::hash::Hash;
+
 /// Efficient cachable entities mapping to the models returned from Discord's
 /// API.
 ///
@@ -13,7 +15,7 @@ pub mod voice;
 ///
 /// [`EmojiEntity`]: emoji/struct.EmojiEntity.html
 pub trait Entity: Send {
-    type Id: Send;
+    type Id: Eq + Hash + Send;
 
     /// Return the ID of the entity.
     ///
