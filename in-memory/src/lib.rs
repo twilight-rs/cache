@@ -82,8 +82,8 @@ use self::{
         InMemoryAttachmentRepository, InMemoryCategoryChannelRepository, InMemoryEmojiRepository,
         InMemoryGroupRepository, InMemoryGuildRepository, InMemoryMemberRepository,
         InMemoryMessageRepository, InMemoryPresenceRepository, InMemoryPrivateChannelRepository,
-        InMemoryRoleRepository, InMemoryTextChannelRepository, InMemoryUserRepository,
-        InMemoryVoiceChannelRepository, InMemoryVoiceStateRepository,
+        InMemoryRepository, InMemoryRoleRepository, InMemoryTextChannelRepository,
+        InMemoryUserRepository, InMemoryVoiceChannelRepository, InMemoryVoiceStateRepository,
     },
 };
 use dashmap::DashMap;
@@ -104,6 +104,7 @@ use std::{
     collections::{BTreeSet, HashSet},
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
+    marker::PhantomData,
     sync::Arc,
 };
 use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, RoleId, UserId};
@@ -271,6 +272,10 @@ impl InMemoryBackend {
     pub fn config(&self) -> Config {
         self.0.config.clone()
     }
+
+    fn repo<T>(&self) -> InMemoryRepository<T> {
+        InMemoryRepository(self.clone(), PhantomData)
+    }
 }
 
 /// In memory implementation of a `rarity_cache` backend.
@@ -297,72 +302,72 @@ impl Backend for InMemoryBackend {
 
     /// A new instance of a repository for working with attachments.
     fn attachments(&self) -> Self::AttachmentRepository {
-        InMemoryAttachmentRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with guild category channels.
     fn category_channels(&self) -> Self::CategoryChannelRepository {
-        InMemoryCategoryChannelRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with emojis.
     fn emojis(&self) -> Self::EmojiRepository {
-        InMemoryEmojiRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with groups.
     fn groups(&self) -> Self::GroupRepository {
-        InMemoryGroupRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with guilds.
     fn guilds(&self) -> Self::GuildRepository {
-        InMemoryGuildRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with members.
     fn members(&self) -> Self::MemberRepository {
-        InMemoryMemberRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with messages.
     fn messages(&self) -> Self::MessageRepository {
-        InMemoryMessageRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with presences.
     fn presences(&self) -> Self::PresenceRepository {
-        InMemoryPresenceRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with private channels.
     fn private_channels(&self) -> Self::PrivateChannelRepository {
-        InMemoryPrivateChannelRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with roles.
     fn roles(&self) -> Self::RoleRepository {
-        InMemoryRoleRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with guild text channels.
     fn text_channels(&self) -> Self::TextChannelRepository {
-        InMemoryTextChannelRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with users.
     fn users(&self) -> Self::UserRepository {
-        InMemoryUserRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with guild voice channels.
     fn voice_channels(&self) -> Self::VoiceChannelRepository {
-        InMemoryVoiceChannelRepository(self.clone())
+        self.repo()
     }
 
     /// A new instance of a repository for working with voice states.
     fn voice_states(&self) -> Self::VoiceStateRepository {
-        InMemoryVoiceStateRepository(self.clone())
+        self.repo()
     }
 }
 
