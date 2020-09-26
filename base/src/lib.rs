@@ -47,9 +47,9 @@
 //! // To update the cache, you pass events from the gateway into it. Say that
 //! // we already have a gateway event to update the cache with:
 //! # let event = twilight_model::gateway::event::Event::GatewayHeartbeatAck;
-//! cache.update(&event).await?;
+//! cache.process(&event).await?;
 //!
-//! // It's as easy as calling the `update` method. The cache will call the
+//! // It's as easy as calling the `process` method. The cache will call the
 //! // backend's repositories to insert, remove, and update data from events.
 //! // Updates might error if the backend errors when doing something.
 //! //

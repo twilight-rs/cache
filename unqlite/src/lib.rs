@@ -17,11 +17,17 @@ use rarity_cache::{
             role::{RoleEntity, RoleRepository},
             GuildEntity, GuildRepository,
         },
-        user::{UserEntity, UserRepository},
+        user::{
+            current_user::{CurrentUserEntity, CurrentUserRepository},
+            UserEntity, UserRepository,
+        },
         voice::{VoiceStateEntity, VoiceStateRepository},
         Entity,
     },
-    repository::{GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, UpsertEntityFuture},
+    repository::{
+        GetEntityFuture, ListEntitiesFuture, RemoveEntityFuture, SingleEntityRepository,
+        UpsertEntityFuture,
+    },
     Backend, Cache, Repository,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -35,6 +41,10 @@ pub trait UnqliteEntity: Entity {
     fn key(id: Self::Id) -> Vec<u8>;
 }
 
+pub trait UnqliteSingleEntity: Entity {
+    fn key() -> &'static [u8];
+}
+
 impl UnqliteEntity for AttachmentEntity {
     fn key(id: AttachmentId) -> Vec<u8> {
         format!("at:{}", id).into_bytes()
@@ -44,6 +54,12 @@ impl UnqliteEntity for AttachmentEntity {
 impl UnqliteEntity for CategoryChannelEntity {
     fn key(id: ChannelId) -> Vec<u8> {
         format!("cc:{}", id).into_bytes()
+    }
+}
+
+impl UnqliteSingleEntity for CurrentUserEntity {
+    fn key() -> &'static [u8] {
+        &[b'u', b'c']
     }
 }
 
@@ -155,9 +171,39 @@ impl<T: DeserializeOwned + Serialize + UnqliteEntity> Repository<T, UnqliteBacke
     }
 }
 
+impl<T: DeserializeOwned + Serialize + UnqliteSingleEntity>
+    SingleEntityRepository<T, UnqliteBackend> for UnqliteRepository<T>
+{
+    fn backend(&self) -> UnqliteBackend {
+        self.0.clone()
+    }
+
+    fn get(&self) -> GetEntityFuture<'_, T, Error> {
+        let bytes: Vec<u8> = (self.0).0.kv_fetch(T::key()).unwrap();
+
+        future::ok(Some(serde_cbor::from_slice::<T>(&bytes).unwrap())).boxed()
+    }
+
+    fn remove(&self) -> RemoveEntityFuture<'_, Error> {
+        future::ready((self.0).0.kv_delete(T::key())).boxed()
+    }
+
+    fn upsert(&self, entity: T) -> UpsertEntityFuture<'_, Error> {
+        let bytes = serde_cbor::to_vec(&entity).unwrap();
+
+        future::ready((self.0).0.kv_store(T::key(), bytes)).boxed()
+    }
+}
+
 impl AttachmentRepository<UnqliteBackend> for UnqliteRepository<AttachmentEntity> {}
 
 impl CategoryChannelRepository<UnqliteBackend> for UnqliteRepository<CategoryChannelEntity> {}
+
+impl CurrentUserRepository<UnqliteBackend> for UnqliteRepository<CurrentUserEntity> {
+    fn guild_ids(&self) -> rarity_cache::repository::ListEntityIdsFuture<'_, GuildId, Error> {
+        unimplemented!("not implemented by this backend");
+    }
+}
 
 impl EmojiRepository<UnqliteBackend> for UnqliteRepository<EmojiEntity> {}
 
@@ -307,6 +353,7 @@ impl Backend for UnqliteBackend {
     type Error = Error;
     type AttachmentRepository = UnqliteRepository<AttachmentEntity>;
     type CategoryChannelRepository = UnqliteRepository<CategoryChannelEntity>;
+    type CurrentUserRepository = UnqliteRepository<CurrentUserEntity>;
     type EmojiRepository = UnqliteRepository<EmojiEntity>;
     type GroupRepository = UnqliteRepository<GroupEntity>;
     type GuildRepository = UnqliteRepository<GuildEntity>;
@@ -325,6 +372,10 @@ impl Backend for UnqliteBackend {
     }
 
     fn category_channels(&self) -> Self::CategoryChannelRepository {
+        self.repo()
+    }
+
+    fn current_user(&self) -> Self::CurrentUserRepository {
         self.repo()
     }
 

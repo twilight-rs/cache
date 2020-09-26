@@ -1,7 +1,10 @@
 mod r#impl;
 mod noop;
 
-pub use self::{noop::NoopRepository, r#impl::Repository};
+pub use self::{
+    noop::NoopRepository,
+    r#impl::{Repository, SingleEntityRepository},
+};
 
 use futures_util::stream::Stream;
 use std::{future::Future, pin::Pin};

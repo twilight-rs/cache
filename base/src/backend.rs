@@ -5,7 +5,7 @@ use super::entity::{
     },
     gateway::PresenceRepository,
     guild::{EmojiRepository, GuildRepository, MemberRepository, RoleRepository},
-    user::UserRepository,
+    user::{CurrentUserRepository, UserRepository},
     voice::VoiceStateRepository,
 };
 
@@ -13,6 +13,7 @@ pub trait Backend: Send + Sized + 'static {
     type Error: Send + 'static;
     type AttachmentRepository: AttachmentRepository<Self> + Send + Sync;
     type CategoryChannelRepository: CategoryChannelRepository<Self> + Send + Sync;
+    type CurrentUserRepository: CurrentUserRepository<Self> + Send + Sync;
     type EmojiRepository: EmojiRepository<Self> + Send + Sync;
     type GroupRepository: GroupRepository<Self> + Send + Sync;
     type GuildRepository: GuildRepository<Self> + Send + Sync;
@@ -33,6 +34,10 @@ pub trait Backend: Send + Sized + 'static {
     /// Return a new instance of the backend's guild category channel repository
     /// implementation.
     fn category_channels(&self) -> Self::CategoryChannelRepository;
+
+    /// Return a new instance of the backend's current user repository
+    /// implementation.
+    fn current_user(&self) -> Self::CurrentUserRepository;
 
     /// Return a new instance of the backend's emoji repository implementation.
     fn emojis(&self) -> Self::EmojiRepository;

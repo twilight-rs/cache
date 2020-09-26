@@ -79,11 +79,12 @@ pub use rarity_cache::Repository;
 use self::{
     config::{Config, EntityType},
     repository::{
-        InMemoryAttachmentRepository, InMemoryCategoryChannelRepository, InMemoryEmojiRepository,
-        InMemoryGroupRepository, InMemoryGuildRepository, InMemoryMemberRepository,
-        InMemoryMessageRepository, InMemoryPresenceRepository, InMemoryPrivateChannelRepository,
-        InMemoryRepository, InMemoryRoleRepository, InMemoryTextChannelRepository,
-        InMemoryUserRepository, InMemoryVoiceChannelRepository, InMemoryVoiceStateRepository,
+        InMemoryAttachmentRepository, InMemoryCategoryChannelRepository,
+        InMemoryCurrentUserRepository, InMemoryEmojiRepository, InMemoryGroupRepository,
+        InMemoryGuildRepository, InMemoryMemberRepository, InMemoryMessageRepository,
+        InMemoryPresenceRepository, InMemoryPrivateChannelRepository, InMemoryRepository,
+        InMemoryRoleRepository, InMemoryTextChannelRepository, InMemoryUserRepository,
+        InMemoryVoiceChannelRepository, InMemoryVoiceStateRepository,
     },
 };
 use dashmap::DashMap;
@@ -95,7 +96,7 @@ use rarity_cache::{
         },
         gateway::PresenceEntity,
         guild::{EmojiEntity, GuildEntity, MemberEntity, RoleEntity},
-        user::UserEntity,
+        user::{CurrentUserEntity, UserEntity},
         voice::VoiceStateEntity,
     },
     Backend, Cache,
@@ -105,7 +106,7 @@ use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
     marker::PhantomData,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, RoleId, UserId};
 
@@ -169,6 +170,7 @@ struct InMemoryBackendRef {
     presences: DashMap<(GuildId, UserId), PresenceEntity>,
     roles: DashMap<RoleId, RoleEntity>,
     users: DashMap<UserId, UserEntity>,
+    user_current: Mutex<Option<CurrentUserEntity>>,
     user_guilds: DashMap<UserId, Vec<GuildId>>,
     voice_states: DashMap<(GuildId, UserId), VoiceStateEntity>,
 }
@@ -287,6 +289,7 @@ impl Backend for InMemoryBackend {
     type Error = InMemoryBackendError;
     type AttachmentRepository = InMemoryAttachmentRepository;
     type CategoryChannelRepository = InMemoryCategoryChannelRepository;
+    type CurrentUserRepository = InMemoryCurrentUserRepository;
     type EmojiRepository = InMemoryEmojiRepository;
     type GroupRepository = InMemoryGroupRepository;
     type GuildRepository = InMemoryGuildRepository;
@@ -307,6 +310,11 @@ impl Backend for InMemoryBackend {
 
     /// A new instance of a repository for working with guild category channels.
     fn category_channels(&self) -> Self::CategoryChannelRepository {
+        self.repo()
+    }
+
+    /// A new instance of a repository for working with the current user.
+    fn current_user(&self) -> Self::CurrentUserRepository {
         self.repo()
     }
 

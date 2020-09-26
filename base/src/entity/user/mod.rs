@@ -1,5 +1,9 @@
 //! Entities related to users.
 
+pub mod current_user;
+
+pub use self::current_user::{CurrentUserEntity, CurrentUserRepository};
+
 use crate::{
     entity::{guild::GuildEntity, Entity},
     repository::{ListEntitiesFuture, ListEntityIdsFuture, Repository},

@@ -23,20 +23,24 @@ use rarity_cache::{
             role::{RoleEntity, RoleRepository},
             GuildEntity, GuildRepository,
         },
-        user::{UserEntity, UserRepository},
+        user::{
+            current_user::{CurrentUserEntity, CurrentUserRepository},
+            UserEntity, UserRepository,
+        },
         voice::{VoiceStateEntity, VoiceStateRepository},
         Entity,
     },
     repository::{
         GetEntityFuture, ListEntitiesFuture, ListEntityIdsFuture, RemoveEntityFuture, Repository,
-        UpsertEntityFuture,
+        SingleEntityRepository, UpsertEntityFuture,
     },
 };
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Mutex};
 use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, RoleId, UserId};
 
 pub type InMemoryAttachmentRepository = InMemoryRepository<AttachmentEntity>;
 pub type InMemoryCategoryChannelRepository = InMemoryRepository<CategoryChannelEntity>;
+pub type InMemoryCurrentUserRepository = InMemoryRepository<CurrentUserEntity>;
 pub type InMemoryEmojiRepository = InMemoryRepository<EmojiEntity>;
 pub type InMemoryGroupRepository = InMemoryRepository<GroupEntity>;
 pub type InMemoryGuildRepository = InMemoryRepository<GuildEntity>;
@@ -170,6 +174,25 @@ impl EntityExt for VoiceStateEntity {
     }
 }
 
+pub trait SingleEntityExt: Clone + Entity {
+    const TYPE: EntityType;
+
+    fn lock(backend: &InMemoryBackend) -> &Mutex<Option<Self>>
+    where
+        Self: Sized;
+}
+
+impl SingleEntityExt for CurrentUserEntity {
+    const TYPE: EntityType = EntityType::USER_CURRENT;
+
+    fn lock(backend: &InMemoryBackend) -> &Mutex<Option<Self>>
+    where
+        Self: Sized,
+    {
+        &backend.0.user_current
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct InMemoryRepository<T>(pub(crate) InMemoryBackend, pub(crate) PhantomData<T>);
 
@@ -200,6 +223,51 @@ impl<E: EntityExt> Repository<E, InMemoryBackend> for InMemoryRepository<E> {
         }
 
         E::map(&self.0).insert(entity.id(), entity);
+
+        future::ok(()).boxed()
+    }
+}
+
+impl SingleEntityRepository<CurrentUserEntity, InMemoryBackend>
+    for InMemoryRepository<CurrentUserEntity>
+{
+    fn backend(&self) -> InMemoryBackend {
+        self.0.clone()
+    }
+
+    fn get(&self) -> GetEntityFuture<'_, CurrentUserEntity, InMemoryBackendError> {
+        future::ok(
+            CurrentUserEntity::lock(&self.0)
+                .lock()
+                .expect("current user poisoned")
+                .clone(),
+        )
+        .boxed()
+    }
+
+    fn remove(&self) -> RemoveEntityFuture<'_, InMemoryBackendError> {
+        CurrentUserEntity::lock(&self.0)
+            .lock()
+            .expect("current user poisoned")
+            .take();
+
+        future::ok(()).boxed()
+    }
+
+    fn upsert(&self, entity: CurrentUserEntity) -> UpsertEntityFuture<'_, InMemoryBackendError> {
+        if !self
+            .0
+            .config()
+            .entity_types()
+            .contains(CurrentUserEntity::TYPE)
+        {
+            return future::ok(()).boxed();
+        }
+
+        CurrentUserEntity::lock(&self.0)
+            .lock()
+            .expect("current user poisoned")
+            .replace(entity);
 
         future::ok(()).boxed()
     }
@@ -238,6 +306,49 @@ impl CategoryChannelRepository<InMemoryBackend> for InMemoryRepository<CategoryC
             .map(|r| r.value().clone());
 
         future::ok(guild).boxed()
+    }
+}
+
+impl CurrentUserRepository<InMemoryBackend> for InMemoryRepository<CurrentUserEntity> {
+    fn guild_ids(&self) -> ListEntityIdsFuture<'_, GuildId, InMemoryBackendError> {
+        let current_user_fut = self.get();
+
+        Box::pin(async move {
+            let user = if let Some(user) = current_user_fut.await? {
+                user
+            } else {
+                return Ok(stream::empty().boxed());
+            };
+
+            let stream = (self.0).0.user_guilds.get(&user.id).map_or_else(
+                || stream::empty().boxed(),
+                |r| stream::iter(r.value().iter().map(|x| Ok(*x)).collect::<Vec<_>>()).boxed(),
+            );
+
+            Ok(stream)
+        })
+    }
+
+    fn guilds(&self) -> ListEntitiesFuture<'_, GuildEntity, InMemoryBackendError> {
+        Box::pin(async move {
+            let user = if let Some(user) = self.get().await? {
+                user
+            } else {
+                return Ok(stream::empty().boxed());
+            };
+
+            let guild_ids = match (self.0).0.user_guilds.get(&user.id) {
+                Some(user_guilds) => user_guilds.clone(),
+                None => return Ok(stream::empty().boxed()),
+            };
+
+            let iter = guild_ids
+                .into_iter()
+                .filter_map(move |id| (self.0).0.guilds.get(&id).map(|r| Ok(r.value().clone())));
+            let stream = stream::iter(iter).boxed();
+
+            Ok(stream)
+        })
     }
 }
 

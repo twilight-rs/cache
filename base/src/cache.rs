@@ -51,6 +51,8 @@ pub struct Cache<T: Backend> {
     pub attachments: T::AttachmentRepository,
     /// Repository for working with category channels.
     pub category_channels: T::CategoryChannelRepository,
+    /// Repository for working with the current user.
+    pub current_user: T::CurrentUserRepository,
     /// Repository for working with emojis.
     pub emojis: T::EmojiRepository,
     /// Repository for working with groups.
@@ -90,6 +92,7 @@ impl<T: Backend> Cache<T> {
         let backend = backend.into();
         let attachments = backend.attachments();
         let category_channels = backend.category_channels();
+        let current_user = backend.current_user();
         let emojis = backend.emojis();
         let groups = backend.groups();
         let guilds = backend.guilds();
@@ -107,6 +110,7 @@ impl<T: Backend> Cache<T> {
             attachments,
             backend,
             category_channels,
+            current_user,
             emojis,
             groups,
             guilds,
@@ -151,7 +155,7 @@ impl<T: Backend> Cache<T> {
     /// let cache: Cache<InMemoryBackend> = Cache::new();
     ///
     /// // And now update the cache with the event:
-    /// cache.update(&event).await?;
+    /// cache.process(&event).await?;
     /// # Ok(()) }
     /// ```
     ///

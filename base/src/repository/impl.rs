@@ -54,3 +54,18 @@ pub trait Repository<E: Entity, B: Backend> {
         Box::pin(future::try_join_all(entities.map(|entity| self.upsert(entity))).map_ok(|_| ()))
     }
 }
+
+pub trait SingleEntityRepository<E: Entity, B: Backend> {
+    /// Retrieve an immutable reference to the backend that the repository is
+    /// tied to.
+    fn backend(&self) -> B;
+
+    /// Get the entity in the cache.
+    fn get(&self) -> GetEntityFuture<'_, E, B::Error>;
+
+    /// Remove the entity from the cache.
+    fn remove(&self) -> RemoveEntityFuture<'_, B::Error>;
+
+    /// Upsert the entity into the cache.
+    fn upsert(&self, entity: E) -> UpsertEntityFuture<'_, B::Error>;
+}

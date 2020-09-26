@@ -1,4 +1,8 @@
-use crate::{repository::{guild::GuildEntity, ListEntityIdsFuture, ListEntitiesFuture, Repository}, Entity};
+use super::super::{guild::GuildEntity, Entity};
+use crate::{
+    repository::{ListEntitiesFuture, ListEntityIdsFuture, SingleEntityRepository},
+    utils, Backend,
+};
 use twilight_model::id::{GuildId, UserId};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -23,10 +27,12 @@ impl Entity for CurrentUserEntity {
     }
 }
 
-pub trait CurrentUserRepository<Error: 'static>: Repository<CurrentUserEntity, Error> {
+pub trait CurrentUserRepository<B: Backend>: SingleEntityRepository<CurrentUserEntity, B> {
     /// Retrieve a stream of guild IDs associated with the current user.
-    fn guild_ids(&self) -> ListEntityIdsFuture<'_, GuildId, Error>;
+    fn guild_ids(&self) -> ListEntityIdsFuture<'_, GuildId, B::Error>;
 
     /// Retrieve a stream of guilds associated with the current user.
-    fn guilds(&self) -> ListEntitiesFuture<'_, GuildEntity, Error>;
+    fn guilds(&self) -> ListEntitiesFuture<'_, GuildEntity, B::Error> {
+        utils::stream_ids(self.guild_ids(), self.backend().guilds())
+    }
 }
