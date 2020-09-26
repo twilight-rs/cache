@@ -112,11 +112,11 @@
     clippy::must_use_candidate
 )]
 
+pub mod cache;
 pub mod entity;
 pub mod repository;
 
 mod backend;
-mod cache;
 mod utils;
 
 pub use self::{backend::Backend, cache::Cache, entity::Entity, repository::Repository};

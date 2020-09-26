@@ -8,12 +8,39 @@ use super::{
     },
     Backend, Repository,
 };
-use futures_util::future;
-use std::sync::Arc;
+use futures_util::future::{self, FutureExt, TryFutureExt};
+use std::{
+    future::Future,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+};
 use twilight_model::{
     channel::{Channel, GuildChannel},
-    gateway::event::Event,
+    gateway::{
+        event::Event,
+        payload::{ChannelCreate, ChannelDelete, GuildCreate, MemberAdd, MemberChunk},
+    },
 };
+
+pub trait CacheUpdate<T: Backend> {
+    fn process<'a>(
+        &'a self,
+        cache: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>>;
+}
+
+pub struct ProcessFuture<'a, T: Backend> {
+    inner: Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>>,
+}
+
+impl<T: Backend> Future for ProcessFuture<'_, T> {
+    type Output = Result<(), T::Error>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        self.inner.poll_unpin(cx)
+    }
+}
 
 /// The cache, a container over a backend that allows you to retrieve and work
 /// with entities.
@@ -131,141 +158,132 @@ impl<T: Backend> Cache<T> {
     /// # Errors
     ///
     /// Returns a backend error if a backend repository operation errors.
-    pub async fn update(&self, event: &Event) -> Result<(), T::Error> {
-        match event {
-            Event::BanAdd(_) => {}
-            Event::BanRemove(_) => {}
-            Event::ChannelCreate(channel) => match &channel.0 {
-                Channel::Group(group) => {
-                    let entity = GroupEntity::from(group.clone());
-
-                    self.groups.upsert(entity).await?;
-                }
-                Channel::Guild(GuildChannel::Category(c)) => {
-                    let entity = CategoryChannelEntity::from(c.clone());
-
-                    self.category_channels.upsert(entity).await?;
-                }
-                Channel::Guild(GuildChannel::Text(c)) => {
-                    let entity = TextChannelEntity::from(c.clone());
-
-                    self.text_channels.upsert(entity).await?;
-                }
-                Channel::Guild(GuildChannel::Voice(c)) => {
-                    let entity = VoiceChannelEntity::from(c.clone());
-
-                    self.voice_channels.upsert(entity).await?;
-                }
-                Channel::Private(c) => {
-                    let entity = PrivateChannelEntity::from(c.clone());
-
-                    self.private_channels.upsert(entity).await?;
-                }
-            },
-            Event::ChannelDelete(channel) => match &channel.0 {
-                Channel::Group(group) => {
-                    self.groups.remove(group.id).await?;
-                }
-                Channel::Guild(GuildChannel::Category(c)) => {
-                    self.category_channels.remove(c.id).await?;
-                }
-                Channel::Guild(GuildChannel::Text(c)) => {
-                    self.text_channels.remove(c.id).await?;
-                }
-                Channel::Guild(GuildChannel::Voice(c)) => {
-                    self.voice_channels.remove(c.id).await?;
-                }
-                Channel::Private(c) => {
-                    self.private_channels.remove(c.id).await?;
-                }
-            },
-            //     Event::ChannelPinsUpdate(pins) => {
-            //         let id = EntityId::Primary(pins.channel_id.0);
-            //         let record = Record::new(id, ResourceType::Channel);
-            //         let field = Field::Message(MessageField::LastPinTimestamp(pins.last_pin_timestamp.as_deref()));
-
-            //         self.backend.upsert_field(FieldUpdate::new(record, field)).await?;
-            //     },
-            //     Event::ChannelUpdate(channel) => {
-            //         self.backend.upsert(ResourceUpsert::Channel(ChannelUpsert {
-            //             inner: channel,
-            //         })).await?;
-            //     },
-            // Ignore non-dispatch gateway events.
-            Event::GatewayHeartbeat(_) => {}
-            Event::GatewayHeartbeatAck => {}
-            Event::GatewayHello(_) => {}
-            Event::GatewayInvalidateSession(_) => {}
-            Event::GatewayReconnect => {}
-            Event::GiftCodeUpdate => {}
-            Event::InviteCreate(_) => {}
-            Event::InviteDelete(_) => {}
-            Event::MemberAdd(member) => {
-                let entity = MemberEntity::from(member.0.clone());
-
-                self.members.upsert(entity);
-            }
-            Event::MemberChunk(chunk) => {
-                future::try_join_all(chunk.members.values().map(|member| {
-                    let entity = MemberEntity::from(member.clone());
-
-                    self.members.upsert(entity)
-                }))
-                .await?;
-            }
-            // Event::MemberUpdate(member) => {
-            //     let entity = MemberEntity::from(&member.0);
-
-            //     self.members.upsert(entity);
-            // },
-            //     // Event::MessageCreate(message) => {
-            //     //     self.backend.upsert(ResourceUpsert::Message(MessageUpsert {
-            //     //         inner: message,
-            //     //     })).await?;
-            //     // },
-            //     Event::MessageDelete(message) => {
-            //         let id = EntityId::Primary(message.id.0);
-            //         let record = Record::new(id, ResourceType::Message);
-
-            //         self.backend.delete(record).await?;
-            //     },
-            //     Event::MessageDeleteBulk(bulk) => {
-            //         self.backend.delete_bulk(bulk.ids.iter().map(|id| {
-            //             Record::new(EntityId::Primary(id.0), ResourceType::Message)
-            //         })).await?;
-            //     },
-            //     Event::MessageUpdate(message) => {
-            //         self.backend.upsert(ResourceUpsert::Message(MessageUpsert {
-            //             inner: message,
-            //         })).await?;
-            //     },
-            Event::Ready(_) => {}
-            Event::Resumed => {}
-            // Ignore shard events.
-            Event::ShardConnected(_) => {}
-            Event::ShardConnecting(_) => {}
-            Event::ShardDisconnected(_) => {}
-            Event::ShardIdentifying(_) => {}
-            Event::ShardPayload(_) => {}
-            Event::ShardReconnecting(_) => {}
-            Event::ShardResuming(_) => {}
-            Event::TypingStart(_) => {}
-            Event::UnavailableGuild(_) => {}
-            //     Event::UserUpdate(current_user) => {
-            //         self.backend.upsert(ResourceUpsert::UserCurrent(UserCurrentUpsert {
-            //             inner: current_user,
-            //         })).await?;
-            //     },
-            //     Event::VoiceServerUpdate(_) => {},
-            //     Event::VoiceStateUpdate(voice_state) => {
-            //         self.backend.upsert(ResourceUpsert::VoiceState(VoiceStateUpsert {
-            //             inner: &voice_state.0,
-            //         })).await?;
-            //     }
-            //     Event::WebhooksUpdate(_) => {},
-            _ => {}
+    pub fn process<'a>(&'a self, event: &'a Event) -> ProcessFuture<'a, T> {
+        ProcessFuture {
+            inner: event.process(self),
         }
+    }
+}
 
-        Ok(())
+impl<T: Backend> CacheUpdate<T> for Event {
+    fn process<'a>(
+        &'a self,
+        cache: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
+        match self {
+            Event::BanAdd(_) => future::ok(()).boxed(),
+            Event::BanRemove(_) => future::ok(()).boxed(),
+            Event::ChannelCreate(event) => event.process(cache),
+            Event::ChannelDelete(event) => event.process(cache),
+            // Ignore non-dispatch gateway events.
+            Event::GatewayHeartbeat(_) => future::ok(()).boxed(),
+            Event::GatewayHeartbeatAck => future::ok(()).boxed(),
+            Event::GatewayHello(_) => future::ok(()).boxed(),
+            Event::GatewayInvalidateSession(_) => future::ok(()).boxed(),
+            Event::GatewayReconnect => future::ok(()).boxed(),
+            Event::GiftCodeUpdate => future::ok(()).boxed(),
+            Event::InviteCreate(_) => future::ok(()).boxed(),
+            Event::InviteDelete(_) => future::ok(()).boxed(),
+            Event::MemberAdd(event) => event.process(cache),
+            Event::MemberChunk(event) => event.process(cache),
+            Event::Ready(_) => todo!(),
+            Event::Resumed => future::ok(()).boxed(),
+            // Ignore shard events.
+            Event::ShardConnected(_) => future::ok(()).boxed(),
+            Event::ShardConnecting(_) => future::ok(()).boxed(),
+            Event::ShardDisconnected(_) => future::ok(()).boxed(),
+            Event::ShardIdentifying(_) => future::ok(()).boxed(),
+            Event::ShardPayload(_) => future::ok(()).boxed(),
+            Event::ShardReconnecting(_) => future::ok(()).boxed(),
+            Event::ShardResuming(_) => future::ok(()).boxed(),
+            Event::TypingStart(_) => future::ok(()).boxed(),
+            Event::UnavailableGuild(_) => todo!(),
+            _ => todo!(),
+        }
+    }
+}
+
+impl<T: Backend> CacheUpdate<T> for ChannelCreate {
+    fn process<'a>(
+        &'a self,
+        cache: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
+        match &self.0 {
+            Channel::Group(group) => {
+                let entity = GroupEntity::from(group.clone());
+
+                cache.groups.upsert(entity)
+            }
+            Channel::Guild(GuildChannel::Category(c)) => {
+                let entity = CategoryChannelEntity::from(c.clone());
+
+                cache.category_channels.upsert(entity)
+            }
+            Channel::Guild(GuildChannel::Text(c)) => {
+                let entity = TextChannelEntity::from(c.clone());
+
+                cache.text_channels.upsert(entity)
+            }
+            Channel::Guild(GuildChannel::Voice(c)) => {
+                let entity = VoiceChannelEntity::from(c.clone());
+
+                cache.voice_channels.upsert(entity)
+            }
+            Channel::Private(c) => {
+                let entity = PrivateChannelEntity::from(c.clone());
+
+                cache.private_channels.upsert(entity)
+            }
+        }
+    }
+}
+
+impl<T: Backend> CacheUpdate<T> for ChannelDelete {
+    fn process<'a>(
+        &'a self,
+        cache: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
+        match &self.0 {
+            Channel::Group(group) => cache.groups.remove(group.id),
+            Channel::Guild(GuildChannel::Category(c)) => cache.category_channels.remove(c.id),
+            Channel::Guild(GuildChannel::Text(c)) => cache.text_channels.remove(c.id),
+            Channel::Guild(GuildChannel::Voice(c)) => cache.voice_channels.remove(c.id),
+            Channel::Private(c) => cache.private_channels.remove(c.id),
+        }
+    }
+}
+
+impl<T: Backend> CacheUpdate<T> for GuildCreate {
+    fn process<'a>(
+        &'a self,
+        _: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
+        todo!();
+    }
+}
+
+impl<T: Backend> CacheUpdate<T> for MemberAdd {
+    fn process<'a>(
+        &'a self,
+        cache: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
+        let entity = MemberEntity::from(self.0.clone());
+
+        cache.members.upsert(entity)
+    }
+}
+
+impl<T: Backend> CacheUpdate<T> for MemberChunk {
+    fn process<'a>(
+        &'a self,
+        cache: &'a Cache<T>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
+        future::try_join_all(self.members.values().map(|member| {
+            let entity = MemberEntity::from(member.clone());
+
+            cache.members.upsert(entity)
+        }))
+        .map_ok(|_| ())
+        .boxed()
     }
 }
