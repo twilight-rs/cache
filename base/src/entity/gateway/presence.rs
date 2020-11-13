@@ -9,9 +9,7 @@ use twilight_model::{
 pub struct PresenceEntity {
     pub activities: Vec<Activity>,
     pub client_status: ClientStatus,
-    pub game: Option<Activity>,
     pub guild_id: GuildId,
-    pub nick: Option<String>,
     pub status: Status,
     pub user_id: UserId,
 }
