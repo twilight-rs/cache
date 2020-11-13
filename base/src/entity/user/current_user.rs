@@ -5,7 +5,7 @@ use crate::{
 };
 use twilight_model::{
     id::{GuildId, UserId},
-    user::{PremiumType, UserFlags},
+    user::{CurrentUser, PremiumType, UserFlags},
 };
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -22,6 +22,24 @@ pub struct CurrentUserEntity {
     pub premium_type: Option<PremiumType>,
     pub public_flags: Option<UserFlags>,
     pub verified: bool,
+}
+
+impl From<CurrentUser> for CurrentUserEntity {
+    fn from(current_user: CurrentUser) -> Self {
+        Self {
+            avatar: current_user.avatar,
+            bot: current_user.bot,
+            discriminator: current_user.discriminator,
+            email: current_user.email,
+            flags: current_user.flags,
+            id: current_user.id,
+            mfa_enabled: current_user.mfa_enabled,
+            name: current_user.name,
+            premium_type: current_user.premium_type,
+            public_flags: current_user.public_flags,
+            verified: current_user.verified,
+        }
+    }
 }
 
 impl Entity for CurrentUserEntity {

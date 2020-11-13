@@ -20,12 +20,14 @@ pub struct PrivateChannelEntity {
 
 impl From<PrivateChannel> for PrivateChannelEntity {
     fn from(channel: PrivateChannel) -> Self {
+        let recipient_id = channel.recipients.first().map(|user| user.id);
+
         Self {
             id: channel.id,
             last_message_id: channel.last_message_id,
             last_pin_timestamp: channel.last_pin_timestamp,
             kind: channel.kind,
-            recipient_id: channel.recipients.first().map(|user| user.id),
+            recipient_id,
         }
     }
 }

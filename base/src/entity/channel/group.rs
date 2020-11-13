@@ -24,6 +24,8 @@ pub struct GroupEntity {
 
 impl From<Group> for GroupEntity {
     fn from(group: Group) -> Self {
+        let recipient_ids = group.recipients.into_iter().map(|user| user.id).collect();
+
         Self {
             application_id: group.application_id,
             icon: group.icon,
@@ -33,7 +35,7 @@ impl From<Group> for GroupEntity {
             last_pin_timestamp: group.last_pin_timestamp,
             name: group.name,
             owner_id: group.owner_id,
-            recipient_ids: group.recipients.into_iter().map(|user| user.id).collect(),
+            recipient_ids,
         }
     }
 }
