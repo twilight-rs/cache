@@ -21,7 +21,7 @@ use twilight_model::{
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MessageEntity {
     pub activity: Option<MessageActivity>,
-    pub application_id: ApplicationId,
+    pub application_id: Option<ApplicationId>,
     pub attachments: Vec<AttachmentId>,
     pub author_id: UserId,
     pub channel_id: ChannelId,
