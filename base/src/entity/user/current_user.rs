@@ -3,7 +3,10 @@ use crate::{
     repository::{ListEntitiesFuture, ListEntityIdsFuture, SingleEntityRepository},
     utils, Backend,
 };
-use twilight_model::id::{GuildId, UserId};
+use twilight_model::{
+    id::{GuildId, UserId},
+    user::{PremiumType, UserFlags},
+};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -12,9 +15,12 @@ pub struct CurrentUserEntity {
     pub bot: bool,
     pub discriminator: String,
     pub email: Option<String>,
+    pub flags: Option<UserFlags>,
     pub id: UserId,
     pub mfa_enabled: bool,
     pub name: String,
+    pub premium_type: Option<PremiumType>,
+    pub public_flags: Option<UserFlags>,
     pub verified: bool,
 }
 

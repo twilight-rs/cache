@@ -18,6 +18,7 @@ pub struct VoiceStateEntity {
     pub self_stream: bool,
     pub session_id: String,
     pub suppress: bool,
+    pub token: Option<String>,
     pub user_id: UserId,
 }
 

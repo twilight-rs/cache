@@ -12,7 +12,7 @@ use crate::{
 use twilight_model::{
     channel::{
         embed::Embed,
-        message::{MessageFlags, MessageReaction, MessageType},
+        message::{MessageActivity, MessageFlags, MessageReaction, MessageType},
     },
     id::{ApplicationId, AttachmentId, ChannelId, GuildId, MessageId, RoleId, UserId, WebhookId},
 };
@@ -20,6 +20,7 @@ use twilight_model::{
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MessageEntity {
+    pub activity: Option<MessageActivity>,
     pub application_id: ApplicationId,
     pub attachments: Vec<AttachmentId>,
     pub author_id: UserId,
