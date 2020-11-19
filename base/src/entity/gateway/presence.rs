@@ -1,6 +1,6 @@
 use crate::{Backend, Entity, Repository};
 use twilight_model::{
-    gateway::presence::{Activity, ClientStatus, Status},
+    gateway::presence::{Activity, ClientStatus, Presence, Status, UserOrId},
     id::{GuildId, UserId},
 };
 
@@ -12,6 +12,23 @@ pub struct PresenceEntity {
     pub guild_id: GuildId,
     pub status: Status,
     pub user_id: UserId,
+}
+
+impl From<Presence> for PresenceEntity {
+    fn from(presence: Presence) -> Self {
+        let user_id = match presence.user {
+            UserOrId::User(user) => user.id,
+            UserOrId::UserId { id } => id,
+        };
+
+        Self {
+            activities: presence.activities,
+            client_status: presence.client_status,
+            guild_id: presence.guild_id,
+            status: presence.status,
+            user_id,
+        }
+    }
 }
 
 impl Entity for PresenceEntity {

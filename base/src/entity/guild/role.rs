@@ -4,7 +4,7 @@ use crate::{
     utils, Backend, Entity,
 };
 use twilight_model::{
-    guild::Permissions,
+    guild::{Permissions, Role},
     id::{GuildId, RoleId},
 };
 
@@ -20,6 +20,22 @@ pub struct RoleEntity {
     pub name: String,
     pub permissions: Permissions,
     pub position: i64,
+}
+
+impl From<(Role, GuildId)> for RoleEntity {
+    fn from((role, guild_id): (Role, GuildId)) -> Self {
+        Self {
+            color: role.color,
+            guild_id,
+            hoist: role.hoist,
+            id: role.id,
+            managed: role.managed,
+            mentionable: role.mentionable,
+            name: role.name,
+            permissions: role.permissions,
+            position: role.position,
+        }
+    }
 }
 
 impl Entity for RoleEntity {

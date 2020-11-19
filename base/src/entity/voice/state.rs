@@ -3,7 +3,10 @@ use crate::{
     repository::{GetEntityFuture, Repository},
     utils, Backend, Entity,
 };
-use twilight_model::id::{ChannelId, GuildId, UserId};
+use twilight_model::{
+    id::{ChannelId, GuildId, UserId},
+    voice::VoiceState,
+};
 
 #[allow(clippy::struct_excessive_bools)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -20,6 +23,24 @@ pub struct VoiceStateEntity {
     pub suppress: bool,
     pub token: Option<String>,
     pub user_id: UserId,
+}
+
+impl From<(VoiceState, GuildId)> for VoiceStateEntity {
+    fn from((voice_state, guild_id): (VoiceState, GuildId)) -> Self {
+        Self {
+            channel_id: voice_state.channel_id,
+            deaf: voice_state.deaf,
+            guild_id,
+            mute: voice_state.mute,
+            self_deaf: voice_state.self_deaf,
+            self_mute: voice_state.self_mute,
+            self_stream: voice_state.self_stream,
+            session_id: voice_state.session_id,
+            suppress: voice_state.suppress,
+            token: voice_state.token,
+            user_id: voice_state.user_id,
+        }
+    }
 }
 
 impl Entity for VoiceStateEntity {

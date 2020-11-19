@@ -3,7 +3,10 @@ use crate::{
     repository::{GetEntityFuture, ListEntitiesFuture, Repository},
     utils, Backend, Entity,
 };
-use twilight_model::id::{EmojiId, GuildId, RoleId, UserId};
+use twilight_model::{
+    guild::Emoji,
+    id::{EmojiId, GuildId, RoleId, UserId},
+};
 
 /// Cachable version of an emoji.
 #[allow(clippy::struct_excessive_bools)]
@@ -19,6 +22,24 @@ pub struct EmojiEntity {
     pub require_colons: bool,
     pub role_ids: Vec<RoleId>,
     pub user_id: Option<UserId>,
+}
+
+impl From<(GuildId, Emoji)> for EmojiEntity {
+    fn from((guild_id, emoji): (GuildId, Emoji)) -> Self {
+        let user_id = emoji.user.map(|user| user.id);
+
+        Self {
+            animated: emoji.animated,
+            available: emoji.available,
+            guild_id,
+            id: emoji.id,
+            managed: emoji.managed,
+            name: emoji.name,
+            require_colons: emoji.require_colons,
+            role_ids: emoji.roles,
+            user_id,
+        }
+    }
 }
 
 impl Entity for EmojiEntity {

@@ -13,6 +13,7 @@ use twilight_model::{
     channel::{
         embed::Embed,
         message::{MessageActivity, MessageFlags, MessageReaction, MessageType},
+        Message,
     },
     id::{ApplicationId, AttachmentId, ChannelId, GuildId, MessageId, RoleId, UserId, WebhookId},
 };
@@ -41,6 +42,54 @@ pub struct MessageEntity {
     pub timestamp: String,
     pub tts: bool,
     pub webhook_id: Option<WebhookId>,
+}
+
+impl From<Message> for MessageEntity {
+    fn from(message: Message) -> Self {
+        let application_id = message.application.map(|a| a.id);
+
+        let attachments = message
+            .attachments
+            .into_iter()
+            .map(|attachment| attachment.id)
+            .collect();
+
+        let mention_channels = message
+            .mention_channels
+            .into_iter()
+            .map(|mention_channel| mention_channel.id)
+            .collect();
+
+        let mentions = message
+            .mentions
+            .into_iter()
+            .map(|mention| mention.0)
+            .collect();
+
+        Self {
+            activity: message.activity,
+            application_id,
+            attachments,
+            author_id: message.author.id,
+            channel_id: message.channel_id,
+            content: message.content,
+            edited_timestamp: message.edited_timestamp,
+            embeds: message.embeds,
+            flags: message.flags,
+            guild_id: message.guild_id,
+            id: message.id,
+            kind: message.kind,
+            mention_channels,
+            mention_everyone: message.mention_everyone,
+            mention_roles: message.mention_roles,
+            mentions,
+            pinned: message.pinned,
+            reactions: message.reactions,
+            timestamp: message.timestamp,
+            tts: message.tts,
+            webhook_id: message.webhook_id,
+        }
+    }
 }
 
 impl Entity for MessageEntity {

@@ -22,8 +22,8 @@ use crate::{
 };
 use twilight_model::{
     guild::{
-        DefaultMessageNotificationLevel, ExplicitContentFilter, MfaLevel, Permissions, PremiumTier,
-        SystemChannelFlags, VerificationLevel,
+        DefaultMessageNotificationLevel, ExplicitContentFilter, Guild, MfaLevel, Permissions,
+        PremiumTier, SystemChannelFlags, VerificationLevel,
     },
     id::{ApplicationId, ChannelId, EmojiId, GuildId, RoleId, UserId},
 };
@@ -73,6 +73,51 @@ pub struct GuildEntity {
     pub verification_level: VerificationLevel,
     pub widget_channel_id: Option<ChannelId>,
     pub widget_enabled: Option<bool>,
+}
+
+impl From<Guild> for GuildEntity {
+    fn from(guild: Guild) -> Self {
+        Self {
+            afk_channel_id: guild.afk_channel_id,
+            afk_timeout: guild.afk_timeout,
+            application_id: guild.application_id,
+            approximate_member_count: guild.approximate_member_count,
+            approximate_presence_count: guild.approximate_presence_count,
+            banner: guild.banner,
+            default_message_notifications: guild.default_message_notifications,
+            description: guild.description,
+            discovery_splash: guild.discovery_splash,
+            explicit_content_filter: guild.explicit_content_filter,
+            features: guild.features,
+            icon: guild.icon,
+            id: guild.id,
+            joined_at: guild.joined_at,
+            large: guild.large,
+            lazy: guild.lazy,
+            max_members: guild.max_members,
+            max_presences: guild.max_presences,
+            max_video_channel_users: guild.max_video_channel_users,
+            member_count: guild.member_count,
+            mfa_level: guild.mfa_level,
+            name: guild.name,
+            owner_id: guild.owner_id,
+            owner: guild.owner,
+            permissions: guild.permissions,
+            preferred_locale: guild.preferred_locale,
+            premium_subscription_count: guild.premium_subscription_count,
+            premium_tier: guild.premium_tier,
+            region: guild.region,
+            rules_channel_id: guild.rules_channel_id,
+            splash: guild.splash,
+            system_channel_flags: guild.system_channel_flags,
+            system_channel_id: guild.system_channel_id,
+            unavailable: guild.unavailable,
+            vanity_url_code: guild.vanity_url_code,
+            verification_level: guild.verification_level,
+            widget_channel_id: guild.widget_channel_id,
+            widget_enabled: guild.widget_enabled,
+        }
+    }
 }
 
 impl Entity for GuildEntity {
