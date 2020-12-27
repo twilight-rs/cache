@@ -36,7 +36,7 @@
 //! // that the backend implements.
 //! use futures_util::stream::StreamExt;
 //! use twilight_cache::{Cache, Repository};
-//! use twilight_cache_inmemory::InMemoryBackend;
+//! use twilight_cache_inmemory::{prelude::*, InMemoryBackend};
 //! use twilight_model::id::{GuildId, MessageId};
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {

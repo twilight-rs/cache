@@ -6,7 +6,7 @@
 //! > (note that, of course, both the emoji and the user must be in the cache)
 //!
 //! ```rust,no_run
-//! use twilight_cache_inmemory::InMemoryCache;
+//! use twilight_cache_inmemory::{prelude::*, InMemoryCache};
 //! use twilight_model::id::EmojiId;
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -31,7 +31,7 @@
 //!
 //! ```rust,no_run
 //! use futures::StreamExt;
-//! use twilight_cache_inmemory::{InMemoryCache, Repository};
+//! use twilight_cache_inmemory::{prelude::*, InMemoryCache, Repository};
 //! use twilight_model::id::GuildId;
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
