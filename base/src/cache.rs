@@ -433,19 +433,27 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildDelete {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        Box::pin(async move {
-            if self.unavailable {
-                if let Some(guild) = cache.guilds.get(self.id).await? {
-                    return cache
-                        .guilds
-                        .upsert(GuildEntity {
-                            unavailable: self.unavailable,
-                            ..guild
-                        })
-                        .await;
-                }
-            }
+        if self.unavailable {
+            return cache
+                .guilds
+                .get(self.id)
+                .and_then(move |guild| {
+                    guild.map_or_else(
+                        || future::ok(()).boxed(),
+                        |guild| {
+                            let entity = GuildEntity {
+                                unavailable: self.unavailable,
+                                ..guild
+                            };
 
+                            cache.guilds.upsert(entity)
+                        },
+                    )
+                })
+                .boxed();
+        }
+
+        Box::pin(async move {
             let mut futures = Vec::new();
 
             let mut channels = cache.guilds.channels(self.id).await?;
@@ -510,12 +518,20 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildUpdate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        Box::pin(async move {
-            let guild = cache.guilds.get(self.id).await?.unwrap();
-            let entity = GuildEntity::from((self.0.clone(), guild));
+        cache
+            .guilds
+            .get(self.id)
+            .and_then(move |guild| {
+                guild.map_or_else(
+                    || future::ok(()).boxed(),
+                    |guild| {
+                        let entity = GuildEntity::from((self.0.clone(), guild));
 
-            cache.guilds.upsert(entity).await
-        })
+                        cache.guilds.upsert(entity)
+                    },
+                )
+            })
+            .boxed()
     }
 }
 
@@ -544,17 +560,20 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberUpdate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        Box::pin(async move {
-            let member = cache
-                .members
-                .get((self.guild_id, self.user.id))
-                .await?
-                .unwrap();
+        cache
+            .members
+            .get((self.guild_id, self.user.id))
+            .and_then(move |member| {
+                member.map_or_else(
+                    || future::ok(()).boxed(),
+                    |member| {
+                        let entity = MemberEntity::from((self.clone(), member));
 
-            let entity = MemberEntity::from((self.clone(), member));
-
-            cache.members.upsert(entity).await
-        })
+                        cache.members.upsert(entity)
+                    },
+                )
+            })
+            .boxed()
     }
 }
 
@@ -672,9 +691,22 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageUpdate {
                 }
             }
 
-            let message = cache.messages.get(self.id).await?.unwrap();
-            let entity = MessageEntity::from((self.clone(), message));
-            futures.push(cache.messages.upsert(entity));
+            futures.push(
+                cache
+                    .messages
+                    .get(self.id)
+                    .and_then(|message| {
+                        message.map_or_else(
+                            || future::ok(()).boxed(),
+                            |message| {
+                                let entity = MessageEntity::from((self.clone(), message));
+
+                                cache.messages.upsert(entity)
+                            },
+                        )
+                    })
+                    .boxed(),
+            );
 
             future::try_join_all(futures).map_ok(|_| ()).await
         })
