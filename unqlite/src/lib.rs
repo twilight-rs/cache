@@ -1,5 +1,5 @@
 use futures_util::future::{self, FutureExt};
-use rarity_cache::{
+use twilight_cache::{
     entity::{
         channel::{
             attachment::{AttachmentEntity, AttachmentRepository},
@@ -200,7 +200,7 @@ impl AttachmentRepository<UnqliteBackend> for UnqliteRepository<AttachmentEntity
 impl CategoryChannelRepository<UnqliteBackend> for UnqliteRepository<CategoryChannelEntity> {}
 
 impl CurrentUserRepository<UnqliteBackend> for UnqliteRepository<CurrentUserEntity> {
-    fn guild_ids(&self) -> rarity_cache::repository::ListEntityIdsFuture<'_, GuildId, Error> {
+    fn guild_ids(&self) -> twilight_cache::repository::ListEntityIdsFuture<'_, GuildId, Error> {
         unimplemented!("not implemented by this backend");
     }
 }
@@ -213,28 +213,28 @@ impl GuildRepository<UnqliteBackend> for UnqliteRepository<GuildEntity> {
     fn channel_ids(
         &self,
         _: GuildId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, ChannelId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, ChannelId, Error> {
         unimplemented!("not implemented by this backend");
     }
 
     fn channels(
         &self,
         _: GuildId,
-    ) -> ListEntitiesFuture<'_, rarity_cache::entity::channel::GuildChannelEntity, Error> {
+    ) -> ListEntitiesFuture<'_, twilight_cache::entity::channel::GuildChannelEntity, Error> {
         unimplemented!("not implemented by this backend");
     }
 
     fn emoji_ids(
         &self,
         _: GuildId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, EmojiId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, EmojiId, Error> {
         unimplemented!("not implemented by this backend");
     }
 
     fn member_ids(
         &self,
         _: GuildId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, UserId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, UserId, Error> {
         unimplemented!("not implemented by this backend");
     }
 
@@ -245,7 +245,7 @@ impl GuildRepository<UnqliteBackend> for UnqliteRepository<GuildEntity> {
     fn presence_ids(
         &self,
         _: GuildId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, UserId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, UserId, Error> {
         unimplemented!("not implemented by this backend");
     }
 
@@ -256,14 +256,14 @@ impl GuildRepository<UnqliteBackend> for UnqliteRepository<GuildEntity> {
     fn role_ids(
         &self,
         _: GuildId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, RoleId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, RoleId, Error> {
         unimplemented!("not implemented by this backend");
     }
 
     fn voice_state_ids(
         &self,
         _: GuildId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, UserId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, UserId, Error> {
         unimplemented!("not implemented by this backend");
     }
 
@@ -292,19 +292,19 @@ impl UserRepository<UnqliteBackend> for UnqliteRepository<UserEntity> {
     fn guild_ids(
         &self,
         _: UserId,
-    ) -> rarity_cache::repository::ListEntityIdsFuture<'_, GuildId, Error> {
+    ) -> twilight_cache::repository::ListEntityIdsFuture<'_, GuildId, Error> {
         unimplemented!("not implemented by this backend")
     }
 }
 
-/// `rarity-cache` backend for the [UnQLite] database.
+/// `twilight-cache` backend for the [UnQLite] database.
 ///
 /// [UnQLite]: https://docs.rs/unqlite
 #[derive(Clone)]
 pub struct UnqliteBackend(Arc<UnQLite>);
 
 impl UnqliteBackend {
-    /// Create a new `rarity-cache` UnQLite backend with a provided instance.
+    /// Create a new `twilight-cache` UnQLite backend with a provided instance.
     pub fn new(unqlite: UnQLite) -> Self {
         Self(Arc::new(unqlite))
     }

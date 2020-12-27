@@ -4,7 +4,7 @@ use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
 };
-use rarity_cache::{
+use twilight_cache::{
     entity::{
         channel::{
             attachment::{AttachmentEntity, AttachmentRepository},

@@ -21,7 +21,7 @@ pub struct CurrentUserEntity {
     pub name: String,
     pub premium_type: Option<PremiumType>,
     pub public_flags: Option<UserFlags>,
-    pub verified: bool,
+    pub verified: Option<bool>,
 }
 
 impl From<CurrentUser> for CurrentUserEntity {

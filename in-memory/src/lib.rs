@@ -6,7 +6,7 @@
 //! > (note that, of course, both the emoji and the user must be in the cache)
 //!
 //! ```rust,no_run
-//! use rarity_cache_inmemory::InMemoryCache;
+//! use twilight_cache_inmemory::{prelude::*, InMemoryCache};
 //! use twilight_model::id::EmojiId;
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -31,7 +31,7 @@
 //!
 //! ```rust,no_run
 //! use futures::StreamExt;
-//! use rarity_cache_inmemory::{InMemoryCache, Repository};
+//! use twilight_cache_inmemory::{prelude::*, InMemoryCache, Repository};
 //! use twilight_model::id::GuildId;
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -67,14 +67,14 @@
 )]
 #![allow(clippy::module_name_repetitions, clippy::must_use_candidate)]
 
-pub extern crate rarity_cache as cache;
+pub extern crate twilight_cache as cache;
 
 pub mod config;
 pub mod prelude;
 pub mod repository;
 
 #[doc(no_inline)]
-pub use rarity_cache::Repository;
+pub use twilight_cache::Repository;
 
 use self::{
     config::{Config, EntityType},
@@ -88,7 +88,7 @@ use self::{
     },
 };
 use dashmap::DashMap;
-use rarity_cache::{
+use twilight_cache::{
     entity::{
         channel::{
             AttachmentEntity, CategoryChannelEntity, GroupEntity, MessageEntity,
@@ -110,12 +110,12 @@ use std::{
 };
 use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, RoleId, UserId};
 
-/// Alias over `rarity_cache::Cache` which uses the [`InMemoryBackend`].
+/// Alias over `twilight_cache::Cache` which uses the [`InMemoryBackend`].
 ///
 /// This allows you to use the in-memory backend like:
 ///
 /// ```
-/// use rarity_cache_inmemory::{InMemoryCache, Repository};
+/// use twilight_cache_inmemory::{InMemoryCache, Repository};
 /// use twilight_model::id::UserId;
 ///
 /// # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -220,12 +220,12 @@ impl InMemoryBackend {
     ///
     /// # Examples
     ///
-    /// Create a new cache backend and then create a `rarity_cache::Cache`
+    /// Create a new cache backend and then create a `twilight_cache::Cache`
     /// with it:
     ///
     /// ```
-    /// use rarity_cache::Cache;
-    /// use rarity_cache_inmemory::InMemoryBackend;
+    /// use twilight_cache::Cache;
+    /// use twilight_cache_inmemory::InMemoryBackend;
     ///
     /// let backend = InMemoryBackend::new();
     /// let cache = Cache::with_backend(backend);
@@ -235,7 +235,7 @@ impl InMemoryBackend {
     /// shorthand for above:
     ///
     /// ```
-    /// use rarity_cache_inmemory::InMemoryCache;
+    /// use twilight_cache_inmemory::InMemoryCache;
     ///
     /// let cache = InMemoryCache::new();
     /// ```
@@ -257,7 +257,7 @@ impl InMemoryBackend {
     /// and only caches messages and users:
     ///
     /// ```
-    /// use rarity_cache_inmemory::{config::EntityType, InMemoryBackend};
+    /// use twilight_cache_inmemory::{config::EntityType, InMemoryBackend};
     ///
     /// let mut builder = InMemoryBackend::builder();
     /// builder
@@ -280,10 +280,10 @@ impl InMemoryBackend {
     }
 }
 
-/// In memory implementation of a `rarity_cache` backend.
+/// In memory implementation of a `twilight_cache` backend.
 ///
 /// **Note**: you should probably not be using the trait's methods directly, and
-/// should wrap a backend instance in `rarity_cache`'s `Cache` and use its
+/// should wrap a backend instance in `twilight_cache`'s `Cache` and use its
 /// methods and fields instead.
 impl Backend for InMemoryBackend {
     type Error = InMemoryBackendError;
@@ -382,7 +382,7 @@ impl Backend for InMemoryBackend {
 #[cfg(test)]
 mod tests {
     use super::{InMemoryBackend, InMemoryBackendBuilder, InMemoryBackendError, InMemoryCache};
-    use rarity_cache::Backend;
+    use twilight_cache::Backend;
     use static_assertions::{assert_impl_all, assert_obj_safe};
     use std::{error::Error, fmt::Debug};
 
