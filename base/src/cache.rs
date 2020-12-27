@@ -139,8 +139,8 @@ impl<T: Backend> Cache<T> {
     /// role repository to delete the role from the datastore:
     ///
     /// ```no_run
-    /// use rarity_cache::Cache;
-    /// use rarity_cache_inmemory::{InMemoryBackend, Repository};
+    /// use twilight_cache::Cache;
+    /// use twilight_cache_inmemory::{InMemoryBackend, Repository};
     /// use twilight_model::{
     ///     gateway::{event::Event, payload::RoleDelete},
     ///     id::{GuildId, RoleId},

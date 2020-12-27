@@ -3,7 +3,7 @@
 #[doc(no_inline)]
 pub use super::{InMemoryBackend, InMemoryBackendError, InMemoryCache};
 #[doc(no_inline)]
-pub use rarity_cache::{
+pub use twilight_cache::{
     entity::{
         channel::{
             attachment::AttachmentRepository as _,

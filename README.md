@@ -1,6 +1,6 @@
-# Rarity Cache
+# Twilight Cache
 
-Rarity Cache is an entity/repository-based cache for the [`twilight-rs`]
+Twilight Cache is an entity/repository-based cache for the [`twilight-rs`]
 ecosystem. If you're not familiar with entities and repositories,
 [Microsoft has an article][docs:repo:microsoft] about it. The idea is that
 entities - things like guilds, channels, or users - contain data about
@@ -11,7 +11,7 @@ entries at the data source.
 
 ### Base Crate
 
-The primary crate is `rarity-cache`, which is a generic abstraction over any
+The primary crate is `twilight-cache`, which is a generic abstraction over any
 datastore backend. It can be built on top of to write backends for things like
 Redis, CouchDB, SQLite, in-process-memory, or anything else.
 
@@ -34,7 +34,7 @@ backend's repository implementations.
 
 ### Implementations
 
-Provided is the `rarity-cache-inmemory` implementation, which caches entities in
+Provided is the `twilight-cache-inmemory` implementation, which caches entities in
 the memory of the process. A Redis implementation is planned.
 
 ## Examples
@@ -43,7 +43,7 @@ Get a message by its ID, and then get a different message's author, knowing only
 the ID of both messages:
 
 ```rust
-use rarity_cache_inmemory::InMemoryCache;
+use twilight_cache_inmemory::InMemoryCache;
 use twilight_model::id::MessageId;
 
 let cache = InMemoryCache::new();
@@ -63,12 +63,12 @@ if let Some(author) = cache.messages.author(MessageId(456)).await? {
 
 ## Installation
 
-Add the following to your `Cargo.toml` to install the `rarity-cache-inmemory`
+Add the following to your `Cargo.toml` to install the `twilight-cache-inmemory`
 crate:
 
 ```toml
 [dependencies]
-rarity-cache-inmemory = { branch = "main", git = "https://github.com/rarity-rs/cache" }
+twilight-cache-inmemory = { branch = "main", git = "https://github.com/twilight-rs/cache" }
 ```
 
 ## License
