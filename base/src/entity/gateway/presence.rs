@@ -1,6 +1,9 @@
 use crate::{Backend, Entity, Repository};
 use twilight_model::{
-    gateway::presence::{Activity, ClientStatus, Presence, Status, UserOrId},
+    gateway::{
+        presence::{Activity, ClientStatus, Presence, Status, UserOrId},
+        payload::PresenceUpdate,
+    },
     id::{GuildId, UserId},
 };
 
@@ -23,6 +26,31 @@ impl From<Presence> for PresenceEntity {
 
         Self {
             activities: presence.activities,
+            client_status: presence.client_status,
+            guild_id: presence.guild_id,
+            status: presence.status,
+            user_id,
+        }
+    }
+}
+
+impl From<PresenceUpdate> for PresenceEntity {
+    fn from(mut presence: PresenceUpdate) -> Self {
+        let mut activities = Vec::new();
+
+        if let Some(game) = presence.game {
+            activities.push(game);
+        }
+
+        activities.append(&mut presence.activities);
+
+        let user_id = match presence.user {
+            UserOrId::User(user) => user.id,
+            UserOrId::UserId { id } => id,
+        };
+
+        Self {
+            activities,
             client_status: presence.client_status,
             guild_id: presence.guild_id,
             status: presence.status,

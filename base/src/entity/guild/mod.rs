@@ -22,8 +22,8 @@ use crate::{
 };
 use twilight_model::{
     guild::{
-        DefaultMessageNotificationLevel, ExplicitContentFilter, Guild, MfaLevel, Permissions,
-        PremiumTier, SystemChannelFlags, VerificationLevel,
+        DefaultMessageNotificationLevel, ExplicitContentFilter, Guild, MfaLevel, PartialGuild,
+        Permissions, PremiumTier, SystemChannelFlags, VerificationLevel,
     },
     id::{ApplicationId, ChannelId, EmojiId, GuildId, RoleId, UserId},
 };
@@ -116,6 +116,47 @@ impl From<Guild> for GuildEntity {
             verification_level: guild.verification_level,
             widget_channel_id: guild.widget_channel_id,
             widget_enabled: guild.widget_enabled,
+        }
+    }
+}
+
+impl From<(PartialGuild, GuildEntity)> for GuildEntity {
+    fn from((guild, old): (PartialGuild, GuildEntity)) -> Self {
+        Self {
+            afk_channel_id: guild.afk_channel_id.or(old.afk_channel_id),
+            afk_timeout: guild.afk_timeout,
+            application_id: guild.application_id.or(old.application_id),
+            banner: guild.banner.or(old.banner),
+            default_message_notifications: guild.default_message_notifications,
+            description: guild.description.or(old.description),
+            discovery_splash: guild.discovery_splash.or(old.discovery_splash),
+            explicit_content_filter: guild.explicit_content_filter,
+            features: guild.features,
+            icon: guild.icon.or(old.icon),
+            id: guild.id,
+            max_members: guild.max_members.or(old.max_members),
+            max_presences: guild.max_presences.or(old.max_presences),
+            member_count: guild.member_count.or(old.member_count),
+            mfa_level: guild.mfa_level,
+            name: guild.name,
+            owner_id: guild.owner_id,
+            owner: guild.owner.or(old.owner),
+            permissions: guild.permissions.or(old.permissions),
+            preferred_locale: guild.preferred_locale,
+            premium_subscription_count: guild
+                .premium_subscription_count
+                .or(old.premium_subscription_count),
+            premium_tier: guild.premium_tier,
+            region: guild.region,
+            rules_channel_id: guild.rules_channel_id.or(old.rules_channel_id),
+            splash: guild.splash.or(old.splash),
+            system_channel_flags: guild.system_channel_flags,
+            system_channel_id: guild.system_channel_id.or(old.system_channel_id),
+            vanity_url_code: guild.vanity_url_code.or(old.vanity_url_code),
+            verification_level: guild.verification_level,
+            widget_channel_id: guild.widget_channel_id.or(old.widget_channel_id),
+            widget_enabled: guild.widget_enabled.or(old.widget_enabled),
+            ..old
         }
     }
 }

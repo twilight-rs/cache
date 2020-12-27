@@ -15,6 +15,7 @@ use twilight_model::{
         message::{MessageActivity, MessageFlags, MessageReaction, MessageType},
         Message,
     },
+    gateway::payload::MessageUpdate,
     id::{ApplicationId, AttachmentId, ChannelId, GuildId, MessageId, RoleId, UserId, WebhookId},
 };
 
@@ -88,6 +89,37 @@ impl From<Message> for MessageEntity {
             timestamp: message.timestamp,
             tts: message.tts,
             webhook_id: message.webhook_id,
+        }
+    }
+}
+
+impl From<(MessageUpdate, MessageEntity)> for MessageEntity {
+    fn from((message, old): (MessageUpdate, MessageEntity)) -> Self {
+        let attachments = message
+            .attachments
+            .map_or(old.attachments, |a| a.into_iter().map(|a| a.id).collect());
+
+        let mentions = message
+            .mentions
+            .map_or(old.mentions, |m| m.into_iter().map(|m| m.id).collect());
+
+        Self {
+            attachments,
+            author_id: message.author.map_or(old.author_id, |a| a.id),
+            channel_id: message.channel_id,
+            content: message.content.map_or(old.content, |m| m),
+            edited_timestamp: message.edited_timestamp.or(old.edited_timestamp),
+            embeds: message.embeds.map_or(old.embeds, |e| e),
+            guild_id: message.guild_id.or(old.guild_id),
+            id: message.id,
+            kind: message.kind.map_or(old.kind, |k| k),
+            mention_everyone: message.mention_everyone.map_or(old.mention_everyone, |m| m),
+            mention_roles: message.mention_roles.map_or(old.mention_roles, |m| m),
+            mentions,
+            pinned: message.pinned.map_or(old.pinned, |p| p),
+            timestamp: message.timestamp.map_or(old.timestamp, |t| t),
+            tts: message.tts.map_or(old.tts, |t| t),
+            ..old
         }
     }
 }
