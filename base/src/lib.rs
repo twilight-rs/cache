@@ -1,6 +1,6 @@
-//! # rarity-cache
+//! # twilight-cache
 //!
-//! `rarity-cache` is an implementation of a generic cache to support any type
+//! `twilight-cache` is an implementation of a generic cache to support any type
 //! of datastore backend implementation. Implementations of backends can be
 //! anything. To name a few examples: a backend to work with a database like
 //! Cassandra or MongoDB, an in-memory database like Redis or memcached, or a
@@ -17,9 +17,9 @@
 //!
 //! # Backends
 //!
-//! Here's a list of backends supported by Rarity:
+//! Here's a list of backends supported by Twilight:
 //!
-//! - [`rarity-cache-inmemory`]: datastore in the process's memory
+//! - [`twilight-cache-inmemory`]: datastore in the process's memory
 //!
 //! # Usage
 //!
@@ -28,15 +28,15 @@
 //! [`Cache`] to update the cache with new event data and retrieve things like
 //! users or emojis.
 //!
-//! Here's an example of using the cache with the [`rarity-cache-inmemory`]
+//! Here's an example of using the cache with the [`twilight-cache-inmemory`]
 //! backend:
 //!
 //! ```rust,no_run
 //! // Import the cache and the Repository trait to work with the repositories
 //! // that the backend implements.
 //! use futures_util::stream::StreamExt;
-//! use rarity_cache::{Cache, Repository};
-//! use rarity_cache_inmemory::InMemoryBackend;
+//! use twilight_cache::{Cache, Repository};
+//! use twilight_cache_inmemory::InMemoryBackend;
 //! use twilight_model::id::{GuildId, MessageId};
 //!
 //! # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -93,7 +93,7 @@
 //! The `serde` feature can be disabled to remove the `Deserialize` and
 //! `Serialize` implementations on entities. It is enabled by default.
 //!
-//! [`rarity-cache-inmemory`]: ../rarity_cache_inmemory/index.html
+//! [`twilight-cache-inmemory`]: ../twilight_cache_inmemory/index.html
 //! [docs:repo:microsoft]: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design
 
 #![deny(
