@@ -9,7 +9,7 @@ use super::entity::{
     voice::VoiceStateRepository,
 };
 
-pub trait Backend: Send + Sized + 'static {
+pub trait Backend: Send + Sync + Sized + 'static {
     type Error: Send + 'static;
     type AttachmentRepository: AttachmentRepository<Self> + Send + Sync;
     type CategoryChannelRepository: CategoryChannelRepository<Self> + Send + Sync;

@@ -38,7 +38,7 @@ use twilight_model::{
     },
 };
 
-pub trait CacheUpdate<T: Backend + Send + Sync> {
+pub trait CacheUpdate<T: Backend> {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -94,14 +94,14 @@ pub struct Cache<T: Backend> {
     pub voice_states: T::VoiceStateRepository,
 }
 
-impl<T: Backend + Send + Sync + Default> Cache<T> {
+impl<T: Backend + Default> Cache<T> {
     /// Create a new cache with a default instance of the backend.
     pub fn new() -> Self {
         Self::with_backend(T::default())
     }
 }
 
-impl<T: Backend + Send + Sync> Cache<T> {
+impl<T: Backend> Cache<T> {
     /// Create a new cache with a provided instance of the backend.
     pub fn with_backend(backend: impl Into<Arc<T>>) -> Self {
         let backend = backend.into();
@@ -184,7 +184,7 @@ impl<T: Backend + Send + Sync> Cache<T> {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for Event {
+impl<T: Backend> CacheUpdate<T> for Event {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -247,7 +247,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for Event {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelCreate {
+impl<T: Backend> CacheUpdate<T> for ChannelCreate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -298,7 +298,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelCreate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelDelete {
+impl<T: Backend> CacheUpdate<T> for ChannelDelete {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -354,7 +354,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelPinsUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelUpdate {
+impl<T: Backend> CacheUpdate<T> for ChannelUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -405,7 +405,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildCreate {
+impl<T: Backend> CacheUpdate<T> for GuildCreate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -464,7 +464,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildCreate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildDelete {
+impl<T: Backend> CacheUpdate<T> for GuildDelete {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -534,7 +534,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildDelete {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildEmojisUpdate {
+impl<T: Backend> CacheUpdate<T> for GuildEmojisUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -550,7 +550,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildEmojisUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildUpdate {
+impl<T: Backend> CacheUpdate<T> for GuildUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -572,7 +572,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberAdd {
+impl<T: Backend> CacheUpdate<T> for MemberAdd {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -589,7 +589,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberAdd {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberRemove {
+impl<T: Backend> CacheUpdate<T> for MemberRemove {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -598,7 +598,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberRemove {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberUpdate {
+impl<T: Backend> CacheUpdate<T> for MemberUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -626,7 +626,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberChunk {
+impl<T: Backend> CacheUpdate<T> for MemberChunk {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -650,7 +650,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberChunk {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageCreate {
+impl<T: Backend> CacheUpdate<T> for MessageCreate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -692,7 +692,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageCreate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDelete {
+impl<T: Backend> CacheUpdate<T> for MessageDelete {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -711,7 +711,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDelete {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDeleteBulk {
+impl<T: Backend> CacheUpdate<T> for MessageDeleteBulk {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -735,7 +735,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDeleteBulk {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageUpdate {
+impl<T: Backend> CacheUpdate<T> for MessageUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -772,7 +772,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for PresenceUpdate {
+impl<T: Backend> CacheUpdate<T> for PresenceUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -791,7 +791,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for PresenceUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for Ready {
+impl<T: Backend> CacheUpdate<T> for Ready {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -802,7 +802,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for Ready {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for RoleCreate {
+impl<T: Backend> CacheUpdate<T> for RoleCreate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -813,7 +813,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for RoleCreate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for RoleDelete {
+impl<T: Backend> CacheUpdate<T> for RoleDelete {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -822,7 +822,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for RoleDelete {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for RoleUpdate {
+impl<T: Backend> CacheUpdate<T> for RoleUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -833,7 +833,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for RoleUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for UserUpdate {
+impl<T: Backend> CacheUpdate<T> for UserUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
@@ -844,7 +844,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for UserUpdate {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for VoiceStateUpdate {
+impl<T: Backend> CacheUpdate<T> for VoiceStateUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
