@@ -38,6 +38,10 @@ use twilight_model::{
     },
 };
 
+fn noop<T: Backend>() -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send>> {
+    future::ok(()).boxed()
+}
+
 pub trait CacheUpdate<T: Backend> {
     fn process<'a>(
         &'a self,
@@ -190,26 +194,19 @@ impl<T: Backend> CacheUpdate<T> for Event {
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match self {
-            Event::BanAdd(_) => future::ok(()).boxed(),
-            Event::BanRemove(_) => future::ok(()).boxed(),
+            Event::BanAdd(_) => noop::<T>(),
+            Event::BanRemove(_) => noop::<T>(),
             Event::ChannelCreate(event) => event.process(cache),
             Event::ChannelDelete(event) => event.process(cache),
             Event::ChannelPinsUpdate(event) => event.process(cache),
             Event::ChannelUpdate(event) => event.process(cache),
-            // Ignore non-dispatch gateway events.
-            Event::GatewayHeartbeat(_) => future::ok(()).boxed(),
-            Event::GatewayHeartbeatAck => future::ok(()).boxed(),
-            Event::GatewayHello(_) => future::ok(()).boxed(),
-            Event::GatewayInvalidateSession(_) => future::ok(()).boxed(),
-            Event::GatewayReconnect => future::ok(()).boxed(),
-            Event::GiftCodeUpdate => future::ok(()).boxed(),
             Event::GuildCreate(event) => event.process(cache),
             Event::GuildDelete(event) => event.process(cache),
             Event::GuildEmojisUpdate(event) => event.process(cache),
-            Event::GuildIntegrationsUpdate(_) => future::ok(()).boxed(),
+            Event::GuildIntegrationsUpdate(_) => noop::<T>(),
             Event::GuildUpdate(event) => event.process(cache),
-            Event::InviteCreate(_) => future::ok(()).boxed(),
-            Event::InviteDelete(_) => future::ok(()).boxed(),
+            Event::InviteCreate(_) => noop::<T>(),
+            Event::InviteDelete(_) => noop::<T>(),
             Event::MemberAdd(event) => event.process(cache),
             Event::MemberRemove(event) => event.process(cache),
             Event::MemberUpdate(event) => event.process(cache),
@@ -219,30 +216,38 @@ impl<T: Backend> CacheUpdate<T> for Event {
             Event::MessageDeleteBulk(event) => event.process(cache),
             Event::MessageUpdate(event) => event.process(cache),
             Event::PresenceUpdate(event) => event.process(cache),
-            Event::PresencesReplace => future::ok(()).boxed(),
-            Event::ReactionAdd(_) => future::ok(()).boxed(),
-            Event::ReactionRemove(_) => future::ok(()).boxed(),
-            Event::ReactionRemoveAll(_) => future::ok(()).boxed(),
-            Event::ReactionRemoveEmoji(_) => future::ok(()).boxed(),
+            Event::ReactionAdd(_) => noop::<T>(),
+            Event::ReactionRemove(_) => noop::<T>(),
+            Event::ReactionRemoveAll(_) => noop::<T>(),
+            Event::ReactionRemoveEmoji(_) => noop::<T>(),
             Event::Ready(event) => event.process(cache),
-            Event::Resumed => future::ok(()).boxed(),
             Event::RoleCreate(event) => event.process(cache),
             Event::RoleDelete(event) => event.process(cache),
             Event::RoleUpdate(event) => event.process(cache),
-            // Ignore shard events.
-            Event::ShardConnected(_) => future::ok(()).boxed(),
-            Event::ShardConnecting(_) => future::ok(()).boxed(),
-            Event::ShardDisconnected(_) => future::ok(()).boxed(),
-            Event::ShardIdentifying(_) => future::ok(()).boxed(),
-            Event::ShardPayload(_) => future::ok(()).boxed(),
-            Event::ShardReconnecting(_) => future::ok(()).boxed(),
-            Event::ShardResuming(_) => future::ok(()).boxed(),
-            Event::TypingStart(_) => future::ok(()).boxed(),
-            Event::UnavailableGuild(_) => future::ok(()).boxed(),
+            Event::TypingStart(_) => noop::<T>(),
+            Event::UnavailableGuild(_) => noop::<T>(),
             Event::UserUpdate(event) => event.process(cache),
-            Event::VoiceServerUpdate(_) => future::ok(()).boxed(),
+            Event::VoiceServerUpdate(_) => noop::<T>(),
             Event::VoiceStateUpdate(event) => event.process(cache),
-            Event::WebhooksUpdate(_) => future::ok(()).boxed(),
+            Event::WebhooksUpdate(_) => noop::<T>(),
+            // Ignore non-dispatch gateway events.
+            Event::GatewayHeartbeat(_)
+            | Event::GatewayHeartbeatAck
+            | Event::GatewayHello(_)
+            | Event::GatewayInvalidateSession(_)
+            | Event::GatewayReconnect
+            | Event::Resumed
+            // Ignore useless events.
+            | Event::GiftCodeUpdate
+            | Event::PresencesReplace
+            // Ignore shard events.
+            | Event::ShardConnected(_)
+            | Event::ShardConnecting(_)
+            | Event::ShardDisconnected(_)
+            | Event::ShardIdentifying(_)
+            | Event::ShardPayload(_)
+            | Event::ShardReconnecting(_)
+            | Event::ShardResuming(_) => noop::<T>(),
         }
     }
 }
