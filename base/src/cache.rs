@@ -19,6 +19,7 @@ use futures_util::{
 };
 use std::{
     future::Future,
+    iter::FromIterator,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
@@ -259,12 +260,13 @@ impl<T: Backend> CacheUpdate<T> for ChannelCreate {
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match &self.0 {
             Channel::Group(group) => {
-                let futures = FuturesUnordered::new();
-
-                for user in &group.recipients {
-                    let entity = UserEntity::from(user.clone());
-                    futures.push(cache.users.upsert(entity));
-                }
+                let futures = FuturesUnordered::from_iter(
+                    group
+                        .recipients
+                        .iter()
+                        .cloned()
+                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                );
 
                 let entity = GroupEntity::from(group.clone());
                 futures.push(cache.groups.upsert(entity));
@@ -287,12 +289,12 @@ impl<T: Backend> CacheUpdate<T> for ChannelCreate {
                 cache.voice_channels.upsert(entity)
             }
             Channel::Private(c) => {
-                let futures = FuturesUnordered::new();
-
-                for user in &c.recipients {
-                    let entity = UserEntity::from(user.clone());
-                    futures.push(cache.users.upsert(entity));
-                }
+                let futures = FuturesUnordered::from_iter(
+                    c.recipients
+                        .iter()
+                        .cloned()
+                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                );
 
                 let entity = PrivateChannelEntity::from(c.clone());
                 futures.push(cache.private_channels.upsert(entity));
@@ -366,12 +368,13 @@ impl<T: Backend> CacheUpdate<T> for ChannelUpdate {
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match &self.0 {
             Channel::Group(group) => {
-                let futures = FuturesUnordered::new();
-
-                for user in &group.recipients {
-                    let entity = UserEntity::from(user.clone());
-                    futures.push(cache.users.upsert(entity));
-                }
+                let futures = FuturesUnordered::from_iter(
+                    group
+                        .recipients
+                        .iter()
+                        .cloned()
+                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                );
 
                 let entity = GroupEntity::from(group.clone());
                 futures.push(cache.groups.upsert(entity));
@@ -394,12 +397,12 @@ impl<T: Backend> CacheUpdate<T> for ChannelUpdate {
                 cache.voice_channels.upsert(entity)
             }
             Channel::Private(c) => {
-                let futures = FuturesUnordered::new();
-
-                for user in &c.recipients {
-                    let entity = UserEntity::from(user.clone());
-                    futures.push(cache.users.upsert(entity));
-                }
+                let futures = FuturesUnordered::from_iter(
+                    c.recipients
+                        .iter()
+                        .cloned()
+                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                );
 
                 let entity = PrivateChannelEntity::from(c.clone());
                 futures.push(cache.private_channels.upsert(entity));
@@ -544,14 +547,13 @@ impl<T: Backend> CacheUpdate<T> for GuildEmojisUpdate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let futures = FuturesUnordered::new();
-
-        for emoji in self.emojis.values() {
-            let entity = EmojiEntity::from((self.guild_id, emoji.clone()));
-            futures.push(cache.emojis.upsert(entity));
-        }
-
-        futures.try_collect().boxed()
+        FuturesUnordered::from_iter(self.emojis.values().cloned().map(|emoji| {
+            cache
+                .emojis
+                .upsert(EmojiEntity::from((self.guild_id, emoji)))
+        }))
+        .try_collect()
+        .boxed()
     }
 }
 
