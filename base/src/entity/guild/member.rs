@@ -39,16 +39,16 @@ impl From<Member> for MemberEntity {
     }
 }
 
-impl From<(MemberUpdate, MemberEntity)> for MemberEntity {
-    fn from((member, old): (MemberUpdate, MemberEntity)) -> Self {
+impl MemberEntity {
+    pub fn update(self, update: MemberUpdate) -> Self {
         Self {
-            guild_id: member.guild_id,
-            joined_at: Some(member.joined_at),
-            nick: member.nick.or(old.nick),
-            premium_since: member.premium_since.or(old.premium_since),
-            role_ids: member.roles,
-            user_id: member.user.id,
-            ..old
+            guild_id: update.guild_id,
+            joined_at: Some(update.joined_at),
+            nick: update.nick.or(self.nick),
+            premium_since: update.premium_since.or(self.premium_since),
+            role_ids: update.roles,
+            user_id: update.user.id,
+            ..self
         }
     }
 }

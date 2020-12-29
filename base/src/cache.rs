@@ -568,11 +568,7 @@ impl<T: Backend> CacheUpdate<T> for GuildUpdate {
             .and_then(move |guild| {
                 guild.map_or_else(
                     || future::ok(()).boxed(),
-                    |guild| {
-                        let entity = GuildEntity::from((self.0.clone(), guild));
-
-                        cache.guilds.upsert(entity)
-                    },
+                    |guild| cache.guilds.upsert(guild.update(self.0.clone())),
                 )
             })
             .boxed()
@@ -622,8 +618,7 @@ impl<T: Backend> CacheUpdate<T> for MemberUpdate {
                         let user_entity = UserEntity::from(self.user.clone());
                         futures.push(cache.users.upsert(user_entity));
 
-                        let member_entity = MemberEntity::from((self.clone(), member));
-                        futures.push(cache.members.upsert(member_entity));
+                        futures.push(cache.members.upsert(member.update(self.clone())));
 
                         futures.try_collect().boxed()
                     },
@@ -764,11 +759,7 @@ impl<T: Backend> CacheUpdate<T> for MessageUpdate {
                     .and_then(|message| {
                         message.map_or_else(
                             || future::ok(()).boxed(),
-                            |message| {
-                                let entity = MessageEntity::from((self.clone(), message));
-
-                                cache.messages.upsert(entity)
-                            },
+                            |message| cache.messages.upsert(message.update(self.clone())),
                         )
                     })
                     .boxed(),

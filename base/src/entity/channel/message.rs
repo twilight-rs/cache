@@ -93,33 +93,33 @@ impl From<Message> for MessageEntity {
     }
 }
 
-impl From<(MessageUpdate, MessageEntity)> for MessageEntity {
-    fn from((message, old): (MessageUpdate, MessageEntity)) -> Self {
-        let attachments = message
+impl MessageEntity {
+    pub fn update(self, update: MessageUpdate) -> Self {
+        let attachments = update
             .attachments
-            .map_or(old.attachments, |a| a.into_iter().map(|a| a.id).collect());
+            .map_or(self.attachments, |a| a.into_iter().map(|a| a.id).collect());
 
-        let mentions = message
+        let mentions = update
             .mentions
-            .map_or(old.mentions, |m| m.into_iter().map(|m| m.id).collect());
+            .map_or(self.mentions, |m| m.into_iter().map(|m| m.id).collect());
 
         Self {
             attachments,
-            author_id: message.author.map_or(old.author_id, |a| a.id),
-            channel_id: message.channel_id,
-            content: message.content.map_or(old.content, |m| m),
-            edited_timestamp: message.edited_timestamp.or(old.edited_timestamp),
-            embeds: message.embeds.map_or(old.embeds, |e| e),
-            guild_id: message.guild_id.or(old.guild_id),
-            id: message.id,
-            kind: message.kind.map_or(old.kind, |k| k),
-            mention_everyone: message.mention_everyone.map_or(old.mention_everyone, |m| m),
-            mention_roles: message.mention_roles.map_or(old.mention_roles, |m| m),
+            author_id: update.author.map_or(self.author_id, |a| a.id),
+            channel_id: update.channel_id,
+            content: update.content.map_or(self.content, |m| m),
+            edited_timestamp: update.edited_timestamp.or(self.edited_timestamp),
+            embeds: update.embeds.map_or(self.embeds, |e| e),
+            guild_id: update.guild_id.or(self.guild_id),
+            id: update.id,
+            kind: update.kind.map_or(self.kind, |k| k),
+            mention_everyone: update.mention_everyone.map_or(self.mention_everyone, |m| m),
+            mention_roles: update.mention_roles.map_or(self.mention_roles, |m| m),
             mentions,
-            pinned: message.pinned.map_or(old.pinned, |p| p),
-            timestamp: message.timestamp.map_or(old.timestamp, |t| t),
-            tts: message.tts.map_or(old.tts, |t| t),
-            ..old
+            pinned: update.pinned.map_or(self.pinned, |p| p),
+            timestamp: update.timestamp.map_or(self.timestamp, |t| t),
+            tts: update.tts.map_or(self.tts, |t| t),
+            ..self
         }
     }
 }

@@ -120,43 +120,43 @@ impl From<Guild> for GuildEntity {
     }
 }
 
-impl From<(PartialGuild, GuildEntity)> for GuildEntity {
-    fn from((guild, old): (PartialGuild, GuildEntity)) -> Self {
+impl GuildEntity {
+    pub fn update(self, update: PartialGuild) -> Self {
         Self {
-            afk_channel_id: guild.afk_channel_id.or(old.afk_channel_id),
-            afk_timeout: guild.afk_timeout,
-            application_id: guild.application_id.or(old.application_id),
-            banner: guild.banner.or(old.banner),
-            default_message_notifications: guild.default_message_notifications,
-            description: guild.description.or(old.description),
-            discovery_splash: guild.discovery_splash.or(old.discovery_splash),
-            explicit_content_filter: guild.explicit_content_filter,
-            features: guild.features,
-            icon: guild.icon.or(old.icon),
-            id: guild.id,
-            max_members: guild.max_members.or(old.max_members),
-            max_presences: guild.max_presences.or(old.max_presences),
-            member_count: guild.member_count.or(old.member_count),
-            mfa_level: guild.mfa_level,
-            name: guild.name,
-            owner_id: guild.owner_id,
-            owner: guild.owner.or(old.owner),
-            permissions: guild.permissions.or(old.permissions),
-            preferred_locale: guild.preferred_locale,
-            premium_subscription_count: guild
+            afk_channel_id: update.afk_channel_id.or(self.afk_channel_id),
+            afk_timeout: update.afk_timeout,
+            application_id: update.application_id.or(self.application_id),
+            banner: update.banner.or(self.banner),
+            default_message_notifications: update.default_message_notifications,
+            description: update.description.or(self.description),
+            discovery_splash: update.discovery_splash.or(self.discovery_splash),
+            explicit_content_filter: update.explicit_content_filter,
+            features: update.features,
+            icon: update.icon.or(self.icon),
+            id: update.id,
+            max_members: update.max_members.or(self.max_members),
+            max_presences: update.max_presences.or(self.max_presences),
+            member_count: update.member_count.or(self.member_count),
+            mfa_level: update.mfa_level,
+            name: update.name,
+            owner_id: update.owner_id,
+            owner: update.owner.or(self.owner),
+            permissions: update.permissions.or(self.permissions),
+            preferred_locale: update.preferred_locale,
+            premium_subscription_count: update
                 .premium_subscription_count
-                .or(old.premium_subscription_count),
-            premium_tier: guild.premium_tier,
-            region: guild.region,
-            rules_channel_id: guild.rules_channel_id.or(old.rules_channel_id),
-            splash: guild.splash.or(old.splash),
-            system_channel_flags: guild.system_channel_flags,
-            system_channel_id: guild.system_channel_id.or(old.system_channel_id),
-            vanity_url_code: guild.vanity_url_code.or(old.vanity_url_code),
-            verification_level: guild.verification_level,
-            widget_channel_id: guild.widget_channel_id.or(old.widget_channel_id),
-            widget_enabled: guild.widget_enabled.or(old.widget_enabled),
-            ..old
+                .or(self.premium_subscription_count),
+            premium_tier: update.premium_tier,
+            region: update.region,
+            rules_channel_id: update.rules_channel_id.or(self.rules_channel_id),
+            splash: update.splash.or(self.splash),
+            system_channel_flags: update.system_channel_flags,
+            system_channel_id: update.system_channel_id.or(self.system_channel_id),
+            vanity_url_code: update.vanity_url_code.or(self.vanity_url_code),
+            verification_level: update.verification_level,
+            widget_channel_id: update.widget_channel_id.or(self.widget_channel_id),
+            widget_enabled: update.widget_enabled.or(self.widget_enabled),
+            ..self
         }
     }
 }
