@@ -15,7 +15,7 @@ use super::{
 };
 use futures_util::{
     future::{self, FutureExt, TryFutureExt},
-    stream::StreamExt,
+    stream::{FuturesUnordered, StreamExt, TryStreamExt},
 };
 use std::{
     future::Future,
@@ -254,7 +254,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelCreate {
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match &self.0 {
             Channel::Group(group) => {
-                let mut futures = Vec::new();
+                let futures = FuturesUnordered::new();
 
                 for user in &group.recipients {
                     let entity = UserEntity::from(user.clone());
@@ -264,7 +264,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelCreate {
                 let entity = GroupEntity::from(group.clone());
                 futures.push(cache.groups.upsert(entity));
 
-                future::try_join_all(futures).map_ok(|_| ()).boxed()
+                futures.try_collect().boxed()
             }
             Channel::Guild(GuildChannel::Category(c)) => {
                 let entity = CategoryChannelEntity::from(c.clone());
@@ -282,7 +282,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelCreate {
                 cache.voice_channels.upsert(entity)
             }
             Channel::Private(c) => {
-                let mut futures = Vec::new();
+                let futures = FuturesUnordered::new();
 
                 for user in &c.recipients {
                     let entity = UserEntity::from(user.clone());
@@ -292,7 +292,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelCreate {
                 let entity = PrivateChannelEntity::from(c.clone());
                 futures.push(cache.private_channels.upsert(entity));
 
-                future::try_join_all(futures).map_ok(|_| ()).boxed()
+                futures.try_collect().boxed()
             }
         }
     }
@@ -361,7 +361,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelUpdate {
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match &self.0 {
             Channel::Group(group) => {
-                let mut futures = Vec::new();
+                let futures = FuturesUnordered::new();
 
                 for user in &group.recipients {
                     let entity = UserEntity::from(user.clone());
@@ -371,7 +371,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelUpdate {
                 let entity = GroupEntity::from(group.clone());
                 futures.push(cache.groups.upsert(entity));
 
-                future::try_join_all(futures).map_ok(|_| ()).boxed()
+                futures.try_collect().boxed()
             }
             Channel::Guild(GuildChannel::Category(c)) => {
                 let entity = CategoryChannelEntity::from(c.clone());
@@ -389,7 +389,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelUpdate {
                 cache.voice_channels.upsert(entity)
             }
             Channel::Private(c) => {
-                let mut futures = Vec::new();
+                let futures = FuturesUnordered::new();
 
                 for user in &c.recipients {
                     let entity = UserEntity::from(user.clone());
@@ -399,7 +399,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelUpdate {
                 let entity = PrivateChannelEntity::from(c.clone());
                 futures.push(cache.private_channels.upsert(entity));
 
-                future::try_join_all(futures).map_ok(|_| ()).boxed()
+                futures.try_collect().boxed()
             }
         }
     }
@@ -410,7 +410,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildCreate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let mut futures = Vec::new();
+        let futures = FuturesUnordered::new();
 
         for channel in self.channels.values() {
             match channel {
@@ -460,7 +460,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildCreate {
         let entity = GuildEntity::from(self.0.clone());
         futures.push(cache.guilds.upsert(entity));
 
-        future::try_join_all(futures).map_ok(|_| ()).boxed()
+        futures.try_collect().boxed()
     }
 }
 
@@ -490,7 +490,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildDelete {
         }
 
         Box::pin(async move {
-            let mut futures = Vec::new();
+            let futures = FuturesUnordered::new();
 
             let mut channels = cache.guilds.channels(self.id).await?;
             while let Some(Ok(c)) = channels.next().await {
@@ -528,10 +528,8 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildDelete {
                 futures.push(cache.voice_states.remove((self.id, id)))
             }
 
-            future::try_join_all(futures)
-                .map_ok(|_| ())
-                .and_then(|_| cache.guilds.remove(self.id))
-                .await
+            futures.try_collect::<()>().await?;
+            cache.guilds.remove(self.id).await
         })
     }
 }
@@ -541,14 +539,14 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for GuildEmojisUpdate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let mut futures = Vec::new();
+        let futures = FuturesUnordered::new();
 
         for emoji in self.emojis.values() {
             let entity = EmojiEntity::from((self.guild_id, emoji.clone()));
             futures.push(cache.emojis.upsert(entity));
         }
 
-        future::try_join_all(futures).map_ok(|_| ()).boxed()
+        futures.try_collect().boxed()
     }
 }
 
@@ -579,7 +577,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberAdd {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let mut futures = Vec::new();
+        let futures = FuturesUnordered::new();
 
         let user_entity = UserEntity::from(self.user.clone());
         futures.push(cache.users.upsert(user_entity));
@@ -587,7 +585,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberAdd {
         let member_entity = MemberEntity::from(self.0.clone());
         futures.push(cache.members.upsert(member_entity));
 
-        future::try_join_all(futures).map_ok(|_| ()).boxed()
+        futures.try_collect().boxed()
     }
 }
 
@@ -612,7 +610,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberUpdate {
                 member.map_or_else(
                     || future::ok(()).boxed(),
                     |member| {
-                        let mut futures = Vec::new();
+                        let futures = FuturesUnordered::new();
 
                         let user_entity = UserEntity::from(self.user.clone());
                         futures.push(cache.users.upsert(user_entity));
@@ -620,7 +618,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberUpdate {
                         let member_entity = MemberEntity::from((self.clone(), member));
                         futures.push(cache.members.upsert(member_entity));
 
-                        future::try_join_all(futures).map_ok(|_| ()).boxed()
+                        futures.try_collect().boxed()
                     },
                 )
             })
@@ -633,7 +631,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberChunk {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let mut futures = Vec::new();
+        let futures = FuturesUnordered::new();
 
         for member in self.members.values() {
             let user_entity = UserEntity::from(member.user.clone());
@@ -648,7 +646,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MemberChunk {
             futures.push(cache.presences.upsert(presence_entity));
         }
 
-        future::try_join_all(futures).map_ok(|_| ()).boxed()
+        futures.try_collect().boxed()
     }
 }
 
@@ -658,7 +656,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageCreate {
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         Box::pin(async move {
-            let mut futures = Vec::new();
+            let futures = FuturesUnordered::new();
 
             if let Some(group) = cache.groups.get(self.channel_id).await? {
                 futures.push(cache.groups.upsert(GroupEntity {
@@ -689,7 +687,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageCreate {
             let entity = MessageEntity::from(self.0.clone());
             futures.push(cache.messages.upsert(entity));
 
-            future::try_join_all(futures).map_ok(|_| ()).await
+            futures.try_collect().await
         })
     }
 }
@@ -700,17 +698,15 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDelete {
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         Box::pin(async move {
-            let mut futures = Vec::new();
+            let futures = FuturesUnordered::new();
 
             let mut attachments = cache.messages.attachments(self.id).await?;
             while let Some(Ok(attachment)) = attachments.next().await {
                 futures.push(cache.attachments.remove(attachment.id));
             }
 
-            future::try_join_all(futures)
-                .map_ok(|_| ())
-                .and_then(|_| cache.messages.remove(self.id))
-                .await
+            futures.try_collect::<()>().await?;
+            cache.messages.remove(self.id).await
         })
     }
 }
@@ -721,8 +717,8 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDeleteBulk {
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         Box::pin(async move {
-            let mut attachment_futures = Vec::new();
-            let mut message_futures = Vec::new();
+            let attachment_futures = FuturesUnordered::new();
+            let message_futures = FuturesUnordered::new();
 
             for id in self.ids.iter().copied() {
                 let mut attachments = cache.messages.attachments(id).await?;
@@ -733,10 +729,8 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageDeleteBulk {
                 message_futures.push(cache.messages.remove(id));
             }
 
-            future::try_join_all(attachment_futures)
-                .map_ok(|_| ())
-                .and_then(|_| future::try_join_all(message_futures).map_ok(|_| ()))
-                .await
+            attachment_futures.try_collect::<()>().await?;
+            message_futures.try_collect().await
         })
     }
 }
@@ -747,7 +741,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageUpdate {
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         Box::pin(async move {
-            let mut futures = Vec::new();
+            let futures = FuturesUnordered::new();
 
             if let Some(attachments) = &self.attachments {
                 for attachment in attachments.iter().cloned() {
@@ -773,7 +767,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for MessageUpdate {
                     .boxed(),
             );
 
-            future::try_join_all(futures).map_ok(|_| ()).await
+            futures.try_collect().await
         })
     }
 }
@@ -783,7 +777,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for PresenceUpdate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let mut futures = Vec::new();
+        let futures = FuturesUnordered::new();
 
         if let UserOrId::User(user) = &self.user {
             let entity = UserEntity::from(user.clone());
@@ -793,7 +787,7 @@ impl<T: Backend + Send + Sync> CacheUpdate<T> for PresenceUpdate {
         let entity = PresenceEntity::from(self.clone());
         futures.push(cache.presences.upsert(entity));
 
-        future::try_join_all(futures).map_ok(|_| ()).boxed()
+        futures.try_collect().boxed()
     }
 }
 
