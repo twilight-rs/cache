@@ -320,7 +320,7 @@ impl<T: Backend> CacheUpdate<T> for ChannelDelete {
     }
 }
 
-impl<T: Backend + Send + Sync> CacheUpdate<T> for ChannelPinsUpdate {
+impl<T: Backend> CacheUpdate<T> for ChannelPinsUpdate {
     fn process<'a>(
         &'a self,
         cache: &'a Cache<T>,
