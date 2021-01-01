@@ -633,22 +633,18 @@ impl<T: Backend> CacheUpdate<T> for MemberChunk {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        let futures = FuturesUnordered::new();
-
-        for member in self.members.values() {
-            let user_entity = UserEntity::from(member.user.clone());
-            futures.push(cache.users.upsert(user_entity));
-
-            let member_entity = MemberEntity::from(member.clone());
-            futures.push(cache.members.upsert(member_entity));
-        }
-
-        for presence in self.presences.values() {
-            let presence_entity = PresenceEntity::from(presence.clone());
-            futures.push(cache.presences.upsert(presence_entity));
-        }
-
-        futures.try_collect().boxed()
+        self.members
+            .values()
+            .cloned()
+            .zip(self.presences.values().cloned())
+            .fold(FuturesUnordered::new(), |futures, (member, presence)| {
+                futures.push(cache.users.upsert(UserEntity::from(member.user.clone())));
+                futures.push(cache.members.upsert(MemberEntity::from(member)));
+                futures.push(cache.presences.upsert(PresenceEntity::from(presence)));
+                futures
+            })
+            .try_collect()
+            .boxed()
     }
 }
 
