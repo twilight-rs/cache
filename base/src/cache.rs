@@ -19,7 +19,6 @@ use futures_util::{
 };
 use std::{
     future::Future,
-    iter::FromIterator,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
@@ -260,12 +259,12 @@ impl<T: Backend> CacheUpdate<T> for ChannelCreate {
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match &self.0 {
             Channel::Group(group) => {
-                let futures = FuturesUnordered::from_iter(
-                    group
-                        .recipients
-                        .iter()
-                        .cloned()
-                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                let futures = FuturesUnordered::new();
+
+                futures.push(
+                    cache
+                        .users
+                        .upsert_bulk(group.recipients.iter().cloned().map(UserEntity::from)),
                 );
 
                 let entity = GroupEntity::from(group.clone());
@@ -289,11 +288,12 @@ impl<T: Backend> CacheUpdate<T> for ChannelCreate {
                 cache.voice_channels.upsert(entity)
             }
             Channel::Private(c) => {
-                let futures = FuturesUnordered::from_iter(
-                    c.recipients
-                        .iter()
-                        .cloned()
-                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                let futures = FuturesUnordered::new();
+
+                futures.push(
+                    cache
+                        .users
+                        .upsert_bulk(c.recipients.iter().cloned().map(UserEntity::from)),
                 );
 
                 let entity = PrivateChannelEntity::from(c.clone());
@@ -368,12 +368,12 @@ impl<T: Backend> CacheUpdate<T> for ChannelUpdate {
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
         match &self.0 {
             Channel::Group(group) => {
-                let futures = FuturesUnordered::from_iter(
-                    group
-                        .recipients
-                        .iter()
-                        .cloned()
-                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                let futures = FuturesUnordered::new();
+
+                futures.push(
+                    cache
+                        .users
+                        .upsert_bulk(group.recipients.iter().cloned().map(UserEntity::from)),
                 );
 
                 let entity = GroupEntity::from(group.clone());
@@ -397,11 +397,12 @@ impl<T: Backend> CacheUpdate<T> for ChannelUpdate {
                 cache.voice_channels.upsert(entity)
             }
             Channel::Private(c) => {
-                let futures = FuturesUnordered::from_iter(
-                    c.recipients
-                        .iter()
-                        .cloned()
-                        .map(|user| cache.users.upsert(UserEntity::from(user))),
+                let futures = FuturesUnordered::new();
+
+                futures.push(
+                    cache
+                        .users
+                        .upsert_bulk(c.recipients.iter().cloned().map(UserEntity::from)),
                 );
 
                 let entity = PrivateChannelEntity::from(c.clone());
@@ -437,33 +438,53 @@ impl<T: Backend> CacheUpdate<T> for GuildCreate {
             }
         }
 
-        for emoji in self.emojis.values() {
-            let entity = EmojiEntity::from((self.id, emoji.clone()));
-            futures.push(cache.emojis.upsert(entity));
-        }
+        futures.push(
+            cache.emojis.upsert_bulk(
+                self.emojis
+                    .values()
+                    .cloned()
+                    .map(|e| EmojiEntity::from((self.id, e))),
+            ),
+        );
 
-        for member in self.members.values() {
-            let member_entity = MemberEntity::from(member.clone());
-            futures.push(cache.members.upsert(member_entity));
+        futures.push(
+            cache
+                .members
+                .upsert_bulk(self.members.values().cloned().map(MemberEntity::from)),
+        );
 
-            let user_entity = UserEntity::from(member.user.clone());
-            futures.push(cache.users.upsert(user_entity));
-        }
+        futures.push(
+            cache.users.upsert_bulk(
+                self.members
+                    .values()
+                    .cloned()
+                    .map(|m| UserEntity::from(m.user)),
+            ),
+        );
 
-        for presence in self.presences.values() {
-            let entity = PresenceEntity::from(presence.clone());
-            futures.push(cache.presences.upsert(entity));
-        }
+        futures.push(
+            cache
+                .presences
+                .upsert_bulk(self.presences.values().cloned().map(PresenceEntity::from)),
+        );
 
-        for role in self.roles.values() {
-            let entity = RoleEntity::from((role.clone(), self.id));
-            futures.push(cache.roles.upsert(entity));
-        }
+        futures.push(
+            cache.roles.upsert_bulk(
+                self.roles
+                    .values()
+                    .cloned()
+                    .map(|r| RoleEntity::from((r, self.id))),
+            ),
+        );
 
-        for voice_state in self.voice_states.values() {
-            let entity = VoiceStateEntity::from((voice_state.clone(), self.id));
-            futures.push(cache.voice_states.upsert(entity));
-        }
+        futures.push(
+            cache.voice_states.upsert_bulk(
+                self.voice_states
+                    .values()
+                    .cloned()
+                    .map(|v| VoiceStateEntity::from((v, self.id))),
+            ),
+        );
 
         let entity = GuildEntity::from(self.0.clone());
         futures.push(cache.guilds.upsert(entity));
@@ -547,13 +568,12 @@ impl<T: Backend> CacheUpdate<T> for GuildEmojisUpdate {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        FuturesUnordered::from_iter(self.emojis.values().cloned().map(|emoji| {
-            cache
-                .emojis
-                .upsert(EmojiEntity::from((self.guild_id, emoji)))
-        }))
-        .try_collect()
-        .boxed()
+        cache.emojis.upsert_bulk(
+            self.emojis
+                .values()
+                .cloned()
+                .map(|e| EmojiEntity::from((self.guild_id, e))),
+        )
     }
 }
 
@@ -633,18 +653,30 @@ impl<T: Backend> CacheUpdate<T> for MemberChunk {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        self.members
-            .values()
-            .cloned()
-            .zip(self.presences.values().cloned())
-            .fold(FuturesUnordered::new(), |futures, (member, presence)| {
-                futures.push(cache.users.upsert(UserEntity::from(member.user.clone())));
-                futures.push(cache.members.upsert(MemberEntity::from(member)));
-                futures.push(cache.presences.upsert(PresenceEntity::from(presence)));
-                futures
-            })
-            .try_collect()
-            .boxed()
+        let futures = FuturesUnordered::new();
+
+        futures.push(
+            cache
+                .members
+                .upsert_bulk(self.members.values().cloned().map(MemberEntity::from)),
+        );
+
+        futures.push(
+            cache.users.upsert_bulk(
+                self.members
+                    .values()
+                    .cloned()
+                    .map(|m| UserEntity::from(m.user)),
+            ),
+        );
+
+        futures.push(
+            cache
+                .presences
+                .upsert_bulk(self.presences.values().cloned().map(PresenceEntity::from)),
+        );
+
+        futures.try_collect().boxed()
     }
 }
 
@@ -742,10 +774,14 @@ impl<T: Backend> CacheUpdate<T> for MessageUpdate {
             let futures = FuturesUnordered::new();
 
             if let Some(attachments) = &self.attachments {
-                for attachment in attachments.iter().cloned() {
-                    let entity = AttachmentEntity::from((self.id, attachment));
-                    futures.push(cache.attachments.upsert(entity));
-                }
+                futures.push(
+                    cache.attachments.upsert_bulk(
+                        attachments
+                            .iter()
+                            .cloned()
+                            .map(|a| AttachmentEntity::from((self.id, a))),
+                    ),
+                );
             }
 
             futures.push(
