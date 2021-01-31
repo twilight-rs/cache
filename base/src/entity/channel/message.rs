@@ -64,7 +64,7 @@ impl From<Message> for MessageEntity {
         let mentions = message
             .mentions
             .into_iter()
-            .map(|mention| mention.0)
+            .map(|mention| mention.id)
             .collect();
 
         Self {
