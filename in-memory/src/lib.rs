@@ -384,7 +384,7 @@ mod tests {
     use super::{prelude::*, InMemoryBackendBuilder};
     use futures_util::stream::StreamExt;
     use static_assertions::{assert_impl_all, assert_obj_safe};
-    use std::{collections::HashMap, error::Error, fmt::Debug};
+    use std::{error::Error, fmt::Debug};
     use twilight_cache::{
         entity::{
             channel::{
@@ -492,7 +492,7 @@ mod tests {
 
     fn ready() -> Ready {
         Ready {
-            guilds: HashMap::new(),
+            guilds: Vec::new(),
             session_id: String::from("session"),
             shard: Some([0, 1]),
             user: current_user(),
@@ -508,6 +508,7 @@ mod tests {
             joined_at: Some(String::from("2012-11-21T10:00:00.40000+00:00")),
             mute: false,
             nick: None,
+            pending: false,
             premium_since: None,
             roles: Vec::new(),
             user: user(),
@@ -522,6 +523,7 @@ mod tests {
             joined_at: Some(String::from("2012-11-21T11:00:00.40000+00:00")),
             mute: false,
             nick: None,
+            pending: false,
             premium_since: None,
             roles: Vec::new(),
             user: user2(),
@@ -529,53 +531,48 @@ mod tests {
     }
 
     fn member_chunk() -> MemberChunk {
-        let mut members = HashMap::new();
-        let mut presences = HashMap::new();
+        let mut members = Vec::new();
+        let mut presences = Vec::new();
 
         for i in 400u64..=410 {
-            members.insert(
-                UserId(i),
-                Member {
-                    deaf: false,
-                    guild_id: GuildId(1),
-                    hoisted_role: None,
-                    joined_at: Some(String::from("2012-11-21T10:00:00.40000+00:00")),
-                    mute: false,
-                    nick: None,
-                    premium_since: None,
-                    roles: Vec::new(),
-                    user: User {
-                        avatar: None,
-                        bot: true,
-                        discriminator: format!("0{}", i),
-                        email: None,
-                        flags: None,
-                        id: UserId(i),
-                        locale: Some(String::from("en-US")),
-                        mfa_enabled: None,
-                        name: format!("user{}", i),
-                        premium_type: None,
-                        public_flags: None,
-                        system: Some(false),
-                        verified: Some(false),
-                    },
+            members.push(Member {
+                deaf: false,
+                guild_id: GuildId(1),
+                hoisted_role: None,
+                joined_at: Some(String::from("2012-11-21T10:00:00.40000+00:00")),
+                mute: false,
+                nick: None,
+                pending: false,
+                premium_since: None,
+                roles: Vec::new(),
+                user: User {
+                    avatar: None,
+                    bot: true,
+                    discriminator: format!("0{}", i),
+                    email: None,
+                    flags: None,
+                    id: UserId(i),
+                    locale: Some(String::from("en-US")),
+                    mfa_enabled: None,
+                    name: format!("user{}", i),
+                    premium_type: None,
+                    public_flags: None,
+                    system: Some(false),
+                    verified: Some(false),
                 },
-            );
+            });
 
-            presences.insert(
-                UserId(i),
-                Presence {
-                    activities: Vec::new(),
-                    client_status: ClientStatus {
-                        desktop: None,
-                        mobile: None,
-                        web: None,
-                    },
-                    guild_id: GuildId(1),
-                    status: Status::Offline,
-                    user: UserOrId::UserId { id: UserId(i) },
+            presences.push(Presence {
+                activities: Vec::new(),
+                client_status: ClientStatus {
+                    desktop: None,
+                    mobile: None,
+                    web: None,
                 },
-            );
+                guild_id: GuildId(1),
+                status: Status::Offline,
+                user: UserOrId::UserId { id: UserId(i) },
+            });
         }
 
         MemberChunk {
@@ -748,12 +745,13 @@ mod tests {
                     joined_at: Some(String::from("2012-11-21T10:00:00.40000+00:00")),
                     mute: false,
                     nick: None,
+                    premium_since: None,
                     roles: Vec::new(),
                 }),
                 mention_channels: Vec::new(),
                 mention_everyone: false,
                 mention_roles: Vec::new(),
-                mentions: HashMap::new(),
+                mentions: Vec::new(),
                 pinned: false,
                 reactions: Vec::new(),
                 reference: None,
@@ -769,24 +767,21 @@ mod tests {
     }
 
     fn guild() -> Guild {
-        let mut members = HashMap::new();
-        members.insert(UserId(2), member());
+        let mut members = Vec::new();
+        members.push(member());
 
-        let mut presences = HashMap::new();
-        presences.insert(
-            UserId(2),
-            Presence {
-                activities: Vec::new(),
-                client_status: ClientStatus {
-                    desktop: None,
-                    mobile: None,
-                    web: None,
-                },
-                guild_id: GuildId(1),
-                status: Status::Offline,
-                user: UserOrId::UserId { id: UserId(2) },
+        let mut presences = Vec::new();
+        presences.push(Presence {
+            activities: Vec::new(),
+            client_status: ClientStatus {
+                desktop: None,
+                mobile: None,
+                web: None,
             },
-        );
+            guild_id: GuildId(1),
+            status: Status::Offline,
+            user: UserOrId::UserId { id: UserId(2) },
+        });
 
         Guild {
             afk_channel_id: None,
@@ -795,11 +790,11 @@ mod tests {
             approximate_member_count: Some(1),
             approximate_presence_count: Some(1),
             banner: None,
-            channels: HashMap::new(),
+            channels: Vec::new(),
             default_message_notifications: DefaultMessageNotificationLevel::All,
             description: Some(String::from("a")),
             discovery_splash: None,
-            emojis: HashMap::new(),
+            emojis: Vec::new(),
             explicit_content_filter: ExplicitContentFilter::None,
             features: Vec::new(),
             icon: None,
@@ -822,7 +817,7 @@ mod tests {
             premium_tier: PremiumTier::None,
             presences,
             region: String::from("us-east"),
-            roles: HashMap::new(),
+            roles: Vec::new(),
             rules_channel_id: None,
             splash: None,
             system_channel_flags: SystemChannelFlags::empty(),
@@ -830,7 +825,7 @@ mod tests {
             unavailable: false,
             vanity_url_code: None,
             verification_level: VerificationLevel::Low,
-            voice_states: HashMap::new(),
+            voice_states: Vec::new(),
             widget_channel_id: None,
             widget_enabled: None,
         }
@@ -845,7 +840,7 @@ mod tests {
             default_message_notifications: DefaultMessageNotificationLevel::All,
             description: None,
             discovery_splash: None,
-            emojis: HashMap::new(),
+            emojis: Vec::new(),
             explicit_content_filter: ExplicitContentFilter::None,
             features: Vec::new(),
             icon: None,
@@ -862,7 +857,7 @@ mod tests {
             premium_subscription_count: Some(0),
             premium_tier: PremiumTier::None,
             region: String::from("us-east"),
-            roles: HashMap::new(),
+            roles: Vec::new(),
             rules_channel_id: None,
             splash: None,
             system_channel_flags: SystemChannelFlags::empty(),
@@ -958,6 +953,7 @@ mod tests {
                 joined_at: Some(String::from("2012-11-21T10:00:00.40000+00:00")),
                 mute: false,
                 nick: None,
+                pending: false,
                 premium_since: None,
                 role_ids: Vec::new(),
                 user_id: UserId(2),
@@ -1126,6 +1122,7 @@ mod tests {
                 joined_at: Some(String::from("2012-11-21T11:00:00.40000+00:00")),
                 mute: false,
                 nick: None,
+                pending: false,
                 premium_since: None,
                 role_ids: Vec::new(),
                 user_id: UserId(9),
@@ -1241,6 +1238,7 @@ mod tests {
             guild_id: GuildId(1),
             joined_at: String::from("2012-11-21T11:00:00.40000+00:00"),
             nick: None,
+            pending: false,
             premium_since: None,
             roles: Vec::new(),
             user: User {
@@ -1319,8 +1317,8 @@ mod tests {
         );
 
         // guild emojis update
-        let mut emojis = HashMap::new();
-        emojis.insert(EmojiId(200), emoji());
+        let mut emojis = Vec::new();
+        emojis.push(emoji());
 
         let event = Event::GuildEmojisUpdate(GuildEmojisUpdate {
             emojis,
@@ -1484,7 +1482,13 @@ mod tests {
         let _ = cache.process(&event).await;
 
         assert_eq!(
-            cache.presences.get((GuildId(1), UserId(405))).await.unwrap().unwrap().status,
+            cache
+                .presences
+                .get((GuildId(1), UserId(405)))
+                .await
+                .unwrap()
+                .unwrap()
+                .status,
             Status::Online
         );
 
