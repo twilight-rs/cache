@@ -22,8 +22,8 @@ use crate::{
 };
 use twilight_model::{
     guild::{
-        DefaultMessageNotificationLevel, ExplicitContentFilter, Guild, MfaLevel, Permissions,
-        PremiumTier, SystemChannelFlags, VerificationLevel,
+        DefaultMessageNotificationLevel, ExplicitContentFilter, Guild, MfaLevel, PartialGuild,
+        Permissions, PremiumTier, SystemChannelFlags, VerificationLevel,
     },
     id::{ApplicationId, ChannelId, EmojiId, GuildId, RoleId, UserId},
 };
@@ -116,6 +116,47 @@ impl From<Guild> for GuildEntity {
             verification_level: guild.verification_level,
             widget_channel_id: guild.widget_channel_id,
             widget_enabled: guild.widget_enabled,
+        }
+    }
+}
+
+impl GuildEntity {
+    pub fn update(self, update: PartialGuild) -> Self {
+        Self {
+            afk_channel_id: update.afk_channel_id.or(self.afk_channel_id),
+            afk_timeout: update.afk_timeout,
+            application_id: update.application_id.or(self.application_id),
+            banner: update.banner.or(self.banner),
+            default_message_notifications: update.default_message_notifications,
+            description: update.description.or(self.description),
+            discovery_splash: update.discovery_splash.or(self.discovery_splash),
+            explicit_content_filter: update.explicit_content_filter,
+            features: update.features,
+            icon: update.icon.or(self.icon),
+            id: update.id,
+            max_members: update.max_members.or(self.max_members),
+            max_presences: update.max_presences.or(self.max_presences),
+            member_count: update.member_count.or(self.member_count),
+            mfa_level: update.mfa_level,
+            name: update.name,
+            owner_id: update.owner_id,
+            owner: update.owner.or(self.owner),
+            permissions: update.permissions.or(self.permissions),
+            preferred_locale: update.preferred_locale,
+            premium_subscription_count: update
+                .premium_subscription_count
+                .or(self.premium_subscription_count),
+            premium_tier: update.premium_tier,
+            region: update.region,
+            rules_channel_id: update.rules_channel_id.or(self.rules_channel_id),
+            splash: update.splash.or(self.splash),
+            system_channel_flags: update.system_channel_flags,
+            system_channel_id: update.system_channel_id.or(self.system_channel_id),
+            vanity_url_code: update.vanity_url_code.or(self.vanity_url_code),
+            verification_level: update.verification_level,
+            widget_channel_id: update.widget_channel_id.or(self.widget_channel_id),
+            widget_enabled: update.widget_enabled.or(self.widget_enabled),
+            ..self
         }
     }
 }

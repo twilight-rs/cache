@@ -14,8 +14,8 @@ use std::hash::Hash;
 /// in a relational database.
 ///
 /// [`EmojiEntity`]: emoji/struct.EmojiEntity.html
-pub trait Entity: Send {
-    type Id: Eq + Hash + Send;
+pub trait Entity: Send + Sync {
+    type Id: Copy + Eq + Hash + Send + Sync;
 
     /// Return the ID of the entity.
     ///

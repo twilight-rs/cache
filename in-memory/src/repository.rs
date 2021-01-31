@@ -4,6 +4,7 @@ use futures_util::{
     future::{self, FutureExt},
     stream::{self, StreamExt},
 };
+use std::{marker::PhantomData, sync::Mutex};
 use twilight_cache::{
     entity::{
         channel::{
@@ -35,7 +36,6 @@ use twilight_cache::{
         SingleEntityRepository, UpsertEntityFuture,
     },
 };
-use std::{marker::PhantomData, sync::Mutex};
 use twilight_model::id::{AttachmentId, ChannelId, EmojiId, GuildId, MessageId, RoleId, UserId};
 
 pub type InMemoryAttachmentRepository = InMemoryRepository<AttachmentEntity>;
@@ -206,7 +206,12 @@ impl<E: EntityExt> Repository<E, InMemoryBackend> for InMemoryRepository<E> {
     }
 
     fn list(&self) -> ListEntitiesFuture<'_, E, InMemoryBackendError> {
-        let stream = stream::iter(E::map(&self.0).iter().map(|r| Ok(r.value().clone()))).boxed();
+        let values = E::map(&self.0)
+            .into_iter()
+            .map(|r| *r.key())
+            .filter_map(move |key| E::map(&self.0).get(&key).map(|r| r.value().clone()));
+
+        let stream = stream::iter(values).map(Ok).boxed();
 
         future::ok(stream).boxed()
     }

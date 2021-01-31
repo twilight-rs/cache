@@ -5,6 +5,7 @@ use crate::{
 };
 use twilight_model::{
     guild::Member,
+    gateway::payload::MemberUpdate,
     id::{GuildId, RoleId, UserId},
 };
 
@@ -36,6 +37,20 @@ impl From<Member> for MemberEntity {
             premium_since: member.premium_since,
             role_ids: member.roles,
             user_id: member.user.id,
+        }
+    }
+}
+
+impl MemberEntity {
+    pub fn update(self, update: MemberUpdate) -> Self {
+        Self {
+            guild_id: update.guild_id,
+            joined_at: Some(update.joined_at),
+            nick: update.nick.or(self.nick),
+            premium_since: update.premium_since.or(self.premium_since),
+            role_ids: update.roles,
+            user_id: update.user.id,
+            ..self
         }
     }
 }
