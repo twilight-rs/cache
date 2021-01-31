@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [dependencies]
 futures-util = { default-features = false, features = ["std"], version = "0.3" }
-twilight-cache = { default-features = false, path = "../base" }
+twilight-cache = { default-features = false, features = ["serde"], path = "../base" }
 serde = { default-features = false, version = "1.0" }
 serde_cbor = { default-features = false, features = ["std"], version = "0.11" }
 twilight-model = { default-features = false, version = "0.3" }
