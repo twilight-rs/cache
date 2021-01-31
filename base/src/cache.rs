@@ -282,7 +282,7 @@ impl<T: Backend> CacheUpdate<T> for MemberChunk {
         &'a self,
         cache: &'a Cache<T>,
     ) -> Pin<Box<dyn Future<Output = Result<(), T::Error>> + Send + 'a>> {
-        future::try_join_all(self.members.values().map(|member| {
+        future::try_join_all(self.members.iter().map(|member| {
             let entity = MemberEntity::from(member.clone());
 
             cache.members.upsert(entity)
